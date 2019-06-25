@@ -57,9 +57,6 @@ int main()
 	// Resize OpenGL viewport to initial window resolution
 	on_fb_resize(nullptr, WIN_RES_X, WIN_RES_Y);
 	
-	const char *vert_shader_src =
-		FileLoader("glsl/vertex.glsl").read().c_str();
-	
 	// Generate vertex buffer object and copy vertices data
 	unsigned int vbo;
 	glGenBuffers(1, &vbo);
@@ -67,12 +64,28 @@ int main()
 	glBufferData(
 		GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	
+	// Load and compile vertex shader
+	const char *vert_shader_name = "glsl/vertex.glsl";
+	const char *vert_shader_src =
+		FileLoader(vert_shader_name).read().c_str();
 	unsigned int vert_shader;
 	vert_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vert_shader, 1, &vert_shader_src, NULL);
+	glCompileShader(vert_shader);
 	
-	// Rendering loop
-	while(!glfwWindowShouldClose(window))
+	// Check for compilation errors
+	int success;
+	char info_log[512];
+	glGetShaderiv(vert_shader, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		glGetShaderInfoLog(vert_shader, 512, NULL, info_log);
+		std::cout << vert_shader_name << " compilation failed.\n"
+			<< info_log << std::endl;
+	}
+	
+	// Perform rendering loop
+	while (!glfwWindowShouldClose(window))
 	{
 		handle_input(window);
 		
