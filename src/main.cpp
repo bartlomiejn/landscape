@@ -24,6 +24,21 @@ void handle_input(GLFWwindow *window)
 		glfwSetWindowShouldClose(window, true);
 }
 
+bool is_compile_success(unsigned int shader_id, const char *filename)
+{
+	int success;
+	char info_log[512];
+	glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		glGetShaderInfoLog(shader_id, 512, NULL, info_log);
+		std::cout << filename << " compilation failed.\n" << info_log
+			<< std::endl;
+		return false;
+	}
+	return true;
+}
+
 int main()
 {
 	// Init GLFW
@@ -64,24 +79,30 @@ int main()
 	glBufferData(
 		GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	
-	// Load and compile vertex shader
+	// Load, compile and error check the vertex shader
 	const char *vert_shader_name = "glsl/vertex.glsl";
 	const char *vert_shader_src =
 		FileLoader(vert_shader_name).read().c_str();
-	unsigned int vert_shader;
-	vert_shader = glCreateShader(GL_VERTEX_SHADER);
+	unsigned int vert_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vert_shader, 1, &vert_shader_src, NULL);
 	glCompileShader(vert_shader);
-	
-	// Check for compilation errors
-	int success;
-	char info_log[512];
-	glGetShaderiv(vert_shader, GL_COMPILE_STATUS, &success);
-	if (!success)
+	if (!is_compile_success(vert_shader, vert_shader_name))
 	{
-		glGetShaderInfoLog(vert_shader, 512, NULL, info_log);
-		std::cout << vert_shader_name << " compilation failed.\n"
-			<< info_log << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	
+	// Load, compile and error check the fragment shader
+	const char *frag_shader_name = "glsl/frag.glsl";
+	const char *frag_shader_src =
+		FileLoader(frag_shader_name).read().c_str();
+	unsigned int frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(frag_shader, 1, &frag_shader_src, NULL);
+	glCompileShader(frag_shader);
+	if (!is_compile_success(frag_shader, frag_shader_name))
+	{
+		glfwTerminate();
+		return -1;
 	}
 	
 	// Perform rendering loop

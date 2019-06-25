@@ -53,3 +53,7 @@ configure_file(
         ${PROJECT_SOURCE_DIR}/src/glsl/vertex.glsl
         ${CMAKE_BINARY_DIR}/bin/glsl/vertex.glsl
         COPYONLY)
+configure_file(
+        ${PROJECT_SOURCE_DIR}/src/glsl/frag.glsl
+        ${CMAKE_BINARY_DIR}/bin/glsl/frag.glsl
+        COPYONLY)
