@@ -57,7 +57,8 @@ int main()
 	// Resize OpenGL viewport to initial window resolution
 	on_fb_resize(nullptr, WIN_RES_X, WIN_RES_Y);
 	
-	const char *vert_shader_src = FileLoader("src/glsl/vertex.glsl").read().c_str();
+	const char *vert_shader_src =
+		FileLoader("glsl/vertex.glsl").read().c_str();
 	
 	// Generate vertex buffer object and copy vertices data
 	unsigned int vbo;

@@ -49,3 +49,7 @@ configure_file(
         ${GLFW_BINARY_DIR}/lib/libglfw.3.dylib
         ${CMAKE_BINARY_DIR}/bin/lib/libglfw.3.dylib
         COPYONLY)
+configure_file(
+        ${PROJECT_SOURCE_DIR}/src/glsl/vertex.glsl
+        ${CMAKE_BINARY_DIR}/bin/glsl/vertex.glsl
+        COPYONLY)
