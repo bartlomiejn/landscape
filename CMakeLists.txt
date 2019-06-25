@@ -27,15 +27,20 @@ ExternalProject_Add(
 include_directories(
         ${GLFW_BINARY_DIR}/include
         ${GLM_BINARY_DIR}/include
-        lib/glad/include)
+        lib/glad/include
+        include)
 link_directories(${GLM_BINARY_DIR}/lib)
 link_libraries(${GLFW_BINARY_DIR}/lib/libglfw.3.dylib)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build/)
+
 set(SOURCES_GLAD lib/glad/src/glad.c)
-set(SOURCES ${SOURCES_GLAD} src/main.cpp)
+set(SOURCES
+        ${SOURCES_GLAD}
+        src/main.cpp
+        src/file_loader.cpp)
 
 add_executable(landscape ${SOURCES})
 add_dependencies(landscape glfw glm)
