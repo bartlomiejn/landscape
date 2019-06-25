@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 project(landscape)
 
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
@@ -24,19 +24,21 @@ ExternalProject_Add(
         INSTALL_DIR    ${GLM_BINARY_DIR}
         CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX=${GLM_BINARY_DIR} -DGLM_TEST_ENABLE=OFF)
 
-include_directories(${GLFW_BINARY_DIR}/include ${GLM_BINARY_DIR}/include)
+include_directories(
+        ${GLFW_BINARY_DIR}/include
+        ${GLM_BINARY_DIR}/include
+        lib/glad/include)
 link_directories(${GLM_BINARY_DIR}/lib)
 link_libraries(${GLFW_BINARY_DIR}/lib/libglfw.3.dylib)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build/)
-set(SOURCES main.cpp)
+set(SOURCES_GLAD lib/glad/src/glad.c)
+set(SOURCES ${SOURCES_GLAD} src/main.cpp)
 
 add_executable(landscape ${SOURCES})
-
-add_dependencies(landscape glfw)
-add_dependencies(landscape glm)
+add_dependencies(landscape glfw glm)
 
 configure_file(
         ${GLFW_BINARY_DIR}/lib/libglfw.3.dylib
