@@ -105,6 +105,21 @@ int main()
 		return -1;
 	}
 	
+	// Create and link shader program
+	int success;
+	char info_log[512];
+	int program = glCreateProgram();
+	glAttachShader(program, vert_shader);
+	glAttachShader(program, frag_shader);
+	glLinkProgram(program);
+	glGetProgramiv(program, GL_LINK_STATUS, &success);
+	if (!success) {
+		glGetProgramInfoLog(program, 512, NULL, info_log);
+		std::cout << "Shader program linking failed.\n" << info_log << std::endl;
+	}
+	glDeleteShader(vert_shader);
+	glDeleteShader(frag_shader);
+	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
 	{
