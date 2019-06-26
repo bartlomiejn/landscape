@@ -72,13 +72,6 @@ int main()
 	// Resize OpenGL viewport to initial window resolution
 	on_fb_resize(nullptr, WIN_RES_X, WIN_RES_Y);
 	
-	// Generate vertex buffer object and copy vertices data
-	unsigned int vbo;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(
-		GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	
 	// Load, compile and error check the vertex shader
 	const char *vert_shader_name = "glsl/vertex.glsl";
 	const char *vert_shader_src =
@@ -115,18 +108,44 @@ int main()
 	glGetProgramiv(program, GL_LINK_STATUS, &success);
 	if (!success) {
 		glGetProgramInfoLog(program, 512, NULL, info_log);
-		std::cout << "Shader program linking failed.\n" << info_log << std::endl;
+		std::cout << "Shader program linking failed.\n" << info_log
+			<< std::endl;
 	}
+	
+	// Delete them once linked
 	glDeleteShader(vert_shader);
 	glDeleteShader(frag_shader);
+	
+	// Generate vertex array object which stores vertex attribute configs
+	// and associated VBOs
+	unsigned int vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	
+	// Generate vertex buffer object, copy vertices data, set to vertex
+	// attribute pointer at 0 and enable
+	unsigned int vbo;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(
+		GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(
+		0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+	glEnableVertexAttribArray(0);
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
 	{
 		handle_input(window);
 		
+		// Clear the drawing buffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+		
+		// Draw the triangle
+		glUseProgram(program);
+		glBindVertexArray(vao);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
