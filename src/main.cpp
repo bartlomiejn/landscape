@@ -151,12 +151,17 @@ int main()
 	{
 		handle_input(window);
 		
+		float time = glfwGetTime();
+		float time_val = (sin(time) / 2.0f) + 0.5f;
+		int app_col_loc = glGetUniformLocation(program, "appColor");
+		
 		// Clear the drawing buffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		// Draw the triangle
 		glUseProgram(program);
+		glUniform4f(app_col_loc, time_val, time_val, time_val, 1.0f);
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
