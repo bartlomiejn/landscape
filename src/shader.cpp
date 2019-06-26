@@ -18,7 +18,8 @@ Shader::Shader(const char *vert_name, const char *frag_name)
 	frag_filename = frag_name;
 }
 
-void Shader::try_create_and_link(void)
+void
+Shader::try_create_and_link(void)
 {
 	// Load, compile and error check the vertex shader
 	const char *vert_shader_src =
@@ -69,6 +70,12 @@ void Shader::try_create_and_link(void)
 	glDeleteShader(frag_shader);
 	
 	id = program;
+}
+
+unsigned int
+Shader::get_uniform_location(const char *uniform)
+{
+	return glGetUniformLocation(id, uniform);
 }
 
 unsigned int

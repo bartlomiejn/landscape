@@ -7,6 +7,7 @@ public:
 	Shader(const char* vert_filename, const char* frag_filename);
 	void try_create_and_link(void);
 	unsigned int get_id(void);
+	unsigned int get_uniform_location(const char *uniform);
 	void use(void);
 private:
 	unsigned int id;

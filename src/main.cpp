@@ -2,6 +2,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 #include <shader.h>
 
 #define WIN_RES_X 800
@@ -17,6 +19,12 @@ float vertices[] = {
 unsigned int indices[] = {
 	0, 1, 3, // First triangle
 	1, 2, 3, // Second triangle
+};
+
+float tex_coords[] = {
+	0.0f, 0.0f,  // Lower-left corner
+	1.0f, 0.0f,  // Lower-right corner
+	0.5f, 1.0f   // Top-center
 };
 
 void
@@ -107,10 +115,9 @@ main(void)
 	{
 		handle_input(window);
 		
-		// Calculate uniform and get uniform location
+		// Calculate uniform
 		float time = glfwGetTime();
 		float time_val = (sin(time) / 2.0f) + 0.5f;
-		int appcolor_uni = glGetUniformLocation(rect_shader.get_id(), "appColor");
 		
 		// Clear the drawing buffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -118,7 +125,9 @@ main(void)
 		
 		// Draw the triangle
 		rect_shader.use();
-		glUniform4f(appcolor_uni, time_val, time_val, time_val, 1.0f);
+		glUniform4f(
+			rect_shader.get_uniform_location("appColor"),
+			time_val, time_val, time_val, 1.0f);
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

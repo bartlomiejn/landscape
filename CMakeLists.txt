@@ -30,7 +30,8 @@ include_directories(
         ${GLFW_BINARY_DIR}/include
         ${GLM_BINARY_DIR}/include
         lib/glad/include
-        include)
+        include
+        lib)
 link_directories(${GLM_BINARY_DIR}/lib)
 link_libraries(${GLFW_BINARY_DIR}/lib/libglfw.3.dylib)
 
