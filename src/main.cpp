@@ -2,7 +2,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <file_loader.h>
+#include <shader.h>
 
 #define WIN_RES_X 800
 #define WIN_RES_Y 600
@@ -19,33 +19,21 @@ unsigned int indices[] = {
 	1, 2, 3, // Second triangle
 };
 
-void on_fb_resize(GLFWwindow *window, int width, int height)
+void
+on_fb_resize(GLFWwindow *window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
 
-void handle_input(GLFWwindow *window)
+void
+handle_input(GLFWwindow *window)
 {
 	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 }
 
-bool is_compile_success(unsigned int shader_id, const char *filename)
-{
-	int success;
-	char info_log[512];
-	glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(shader_id, 512, NULL, info_log);
-		std::cout << filename << " compilation failed.\n" << info_log
-			<< std::endl;
-		return false;
-	}
-	return true;
-}
-
-int main()
+int
+main(void)
 {
 	// Init GLFW
 	glfwInit();
@@ -78,49 +66,17 @@ int main()
 	// Resize OpenGL viewport to initial window resolution
 	on_fb_resize(nullptr, WIN_RES_X, WIN_RES_Y);
 	
-	// Load, compile and error check the vertex shader
-	const char *vert_shader_name = "glsl/vertex.glsl";
-	const char *vert_shader_src =
-		FileLoader(vert_shader_name).read().c_str();
-	unsigned int vert_shader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vert_shader, 1, &vert_shader_src, NULL);
-	glCompileShader(vert_shader);
-	if (!is_compile_success(vert_shader, vert_shader_name))
+	// Compile and link triangle shader
+	Shader rect_shader("glsl/vertex.glsl", "glsl/frag.glsl");
+	try
+	{
+		rect_shader.try_create_and_link();
+	}
+	catch (ShaderCompilationFailure err)
 	{
 		glfwTerminate();
 		return -1;
 	}
-	
-	// Load, compile and error check the fragment shader
-	const char *frag_shader_name = "glsl/frag.glsl";
-	const char *frag_shader_src =
-		FileLoader(frag_shader_name).read().c_str();
-	unsigned int frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(frag_shader, 1, &frag_shader_src, NULL);
-	glCompileShader(frag_shader);
-	if (!is_compile_success(frag_shader, frag_shader_name))
-	{
-		glfwTerminate();
-		return -1;
-	}
-	
-	// Create and link shader program
-	int success;
-	char info_log[512];
-	int program = glCreateProgram();
-	glAttachShader(program, vert_shader);
-	glAttachShader(program, frag_shader);
-	glLinkProgram(program);
-	glGetProgramiv(program, GL_LINK_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(program, 512, NULL, info_log);
-		std::cout << "Shader program linking failed.\n" << info_log
-			<< std::endl;
-	}
-	
-	// Delete them once linked
-	glDeleteShader(vert_shader);
-	glDeleteShader(frag_shader);
 	
 	// Generate vertex array object which stores vertex attribute configs
 	// and associated VBOs
@@ -151,17 +107,18 @@ int main()
 	{
 		handle_input(window);
 		
+		// Calculate uniform and get uniform location
 		float time = glfwGetTime();
 		float time_val = (sin(time) / 2.0f) + 0.5f;
-		int app_col_loc = glGetUniformLocation(program, "appColor");
+		int appcolor_uni = glGetUniformLocation(rect_shader.get_id(), "appColor");
 		
 		// Clear the drawing buffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		// Draw the triangle
-		glUseProgram(program);
-		glUniform4f(app_col_loc, time_val, time_val, time_val, 1.0f);
+		rect_shader.use();
+		glUniform4f(appcolor_uni, time_val, time_val, time_val, 1.0f);
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

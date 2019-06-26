@@ -6,7 +6,8 @@ FileLoader::FileLoader(std::string &&name)
 	filename = std::move(name);
 }
 
-std::string FileLoader::read()
+std::string
+FileLoader::read()
 {
 	std::ifstream stream(filename);
 	if (!stream)

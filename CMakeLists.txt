@@ -14,15 +14,17 @@ ExternalProject_Add(
         GIT_REPOSITORY https://github.com/glfw/glfw.git
         GIT_TAG        3.3
         INSTALL_DIR    ${GLFW_BINARY_DIR}
-        CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX=${GLFW_BINARY_DIR} -DBUILD_SHARED_LIBS=ON -DGLFW_BUILD_EXAMPLES=OFF
-        -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF)
+        CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX=${GLFW_BINARY_DIR}
+        -DBUILD_SHARED_LIBS=ON -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF
+        -DGLFW_BUILD_DOCS=OFF)
 ExternalProject_Add(
         glm
         PREFIX         ${GLM_DIR}
         GIT_REPOSITORY https://github.com/g-truc/glm.git
         GIT_TAG        0.9.9.3
         INSTALL_DIR    ${GLM_BINARY_DIR}
-        CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX=${GLM_BINARY_DIR} -DGLM_TEST_ENABLE=OFF)
+        CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX=${GLM_BINARY_DIR}
+        -DGLM_TEST_ENABLE=OFF)
 
 include_directories(
         ${GLFW_BINARY_DIR}/include
@@ -40,7 +42,8 @@ set(SOURCES_GLAD lib/glad/src/glad.c)
 set(SOURCES
         ${SOURCES_GLAD}
         src/main.cpp
-        src/file_loader.cpp)
+        src/file_loader.cpp
+        src/shader.cpp)
 
 add_executable(landscape ${SOURCES})
 add_dependencies(landscape glfw glm)
