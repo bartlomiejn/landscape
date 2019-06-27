@@ -79,9 +79,9 @@ Shader::try_create_and_link(void)
 }
 
 void
-Shader::set_app_color(float r, float g, float b, float a)
+Shader::set_uniform(const char *name, int value)
 {
-	glUniform4f(get_uniform_location("appColor"), r, g, b, a);
+	glUniform1i(get_uniform_location(name), value);
 }
 
 unsigned int

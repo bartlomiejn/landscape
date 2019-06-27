@@ -10,6 +10,7 @@ Image::Image(const char *filename)
 
 void Image::try_load()
 {
+	stbi_set_flip_vertically_on_load(true);
 	img_data = stbi_load(
 		img_filename, &img_width, &img_height, &img_channels, 0);
 	if (!img_data)

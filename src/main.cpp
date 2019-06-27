@@ -52,6 +52,7 @@ do_exit_cleanup(uint vao, uint vbo, uint ebo)
 int
 main(void)
 {
+	
 	// Init GLFW
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -103,24 +104,28 @@ main(void)
 	// Generate vertex array object which stores vertex attribute configs
 	// and associated VBOs
 	unsigned int vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	
 	// Generate vertex buffer object, copy vertices data, set to vertex
 	// attribute pointer at 0 and enable
 	unsigned int vbo;
 	// Generate element buffer object that stores vertex indices
 	unsigned int ebo;
-	size_t vert_stride = 8 * sizeof(float);
+	
+	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 	glGenBuffers(1, &ebo);
+	
+	glBindVertexArray(vao);
+
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(
 		GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(
 		GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
 		GL_STATIC_DRAW);
+	
+	size_t vert_stride = 8 * sizeof(float); // Stride value for `vertices`
 	
 	// Position attribute
 	glVertexAttribPointer(
@@ -137,11 +142,13 @@ main(void)
 		(void *)(6 * sizeof(float)));;
 	glEnableVertexAttribArray(2);
 	
-	// Generate texture
+	// Load images
 	Image image("assets/container.jpg");
+	Image image2("assets/awesomeface.png");
 	try
 	{
 		image.try_load();
+		image2.try_load();
 	}
 	catch (ImageLoadFailure failure)
 	{
@@ -151,6 +158,8 @@ main(void)
 		glfwTerminate();
 		return -1;
 	}
+	
+	// Generate textures
 	unsigned int tex;
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
@@ -162,7 +171,18 @@ main(void)
 		GL_TEXTURE_2D, 0, GL_RGB, image.width(), image.height(), 0,
 		GL_RGB, GL_UNSIGNED_BYTE, image.data());
 	glGenerateMipmap(GL_TEXTURE_2D);
-
+	unsigned int tex2;
+	glGenTextures(1, &tex2);
+	glBindTexture(GL_TEXTURE_2D, tex2);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGBA, image2.width(), image2.height(), 0,
+		GL_RGBA, GL_UNSIGNED_BYTE, image2.data());
+	glGenerateMipmap(GL_TEXTURE_2D);
+	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -172,10 +192,19 @@ main(void)
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
-		// Draw the triangle
+		// Set textures for the rect shader
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, 1);
+		
+		// Use the shader and set the sampler uniforms
 		rect_shader.use();
+		rect_shader.set_uniform("texture1", 0);
+		rect_shader.set_uniform("texture2", 1);
+		
+		// Draw the rect
 		glBindVertexArray(vao);
-		glBindTexture(GL_TEXTURE_2D, tex);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		
