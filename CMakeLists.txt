@@ -36,7 +36,7 @@ link_directories(${GLM_BINARY_DIR}/lib)
 link_libraries(${GLFW_BINARY_DIR}/lib/libglfw.3.dylib)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build/)
 
 set(SOURCES_GLAD lib/glad/src/glad.c)
@@ -44,20 +44,30 @@ set(SOURCES
         ${SOURCES_GLAD}
         src/main.cpp
         src/file_loader.cpp
-        src/shader.cpp)
+        src/shader.cpp
+        src/image.cpp)
 
 add_executable(landscape ${SOURCES})
 add_dependencies(landscape glfw glm)
 
+# Libraries
 configure_file(
         ${GLFW_BINARY_DIR}/lib/libglfw.3.dylib
-        ${CMAKE_BINARY_DIR}/bin/lib/libglfw.3.dylib
+        ${CMAKE_BINARY_DIR}/output/lib/libglfw.3.dylib
         COPYONLY)
+
+# Shaders
 configure_file(
         ${PROJECT_SOURCE_DIR}/src/glsl/vertex.glsl
-        ${CMAKE_BINARY_DIR}/bin/glsl/vertex.glsl
+        ${CMAKE_BINARY_DIR}/output/glsl/vertex.glsl
         COPYONLY)
 configure_file(
         ${PROJECT_SOURCE_DIR}/src/glsl/frag.glsl
-        ${CMAKE_BINARY_DIR}/bin/glsl/frag.glsl
+        ${CMAKE_BINARY_DIR}/output/glsl/frag.glsl
+        COPYONLY)
+
+# Image assets
+configure_file(
+        ${PROJECT_SOURCE_DIR}/assets/container.jpg
+        ${CMAKE_BINARY_DIR}/output/assets/container.jpg
         COPYONLY)

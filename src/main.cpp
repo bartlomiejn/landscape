@@ -2,18 +2,18 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
 #include <shader.h>
+#include <image.h>
 
 #define WIN_RES_X 800
 #define WIN_RES_Y 600
 
 float vertices[] = {
-	0.5f,  0.5f, 0.0f, 	// Top right
-	0.5f, -0.5f, 0.0f,  	// Bottom right
-	-0.5f, -0.5f, 0.0f,  	// Bottom left
-	-0.5f,  0.5f, 0.0f,   	// Top left
+	// positions         // colors          // texture coords
+	0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+	0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+	-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+	-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
 };
 
 unsigned int indices[] = {
@@ -36,8 +36,17 @@ on_fb_resize(GLFWwindow *window, int width, int height)
 void
 handle_input(GLFWwindow *window)
 {
-	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+}
+
+void
+do_exit_cleanup(uint vao, uint vbo, uint ebo)
+{
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(1, &vbo);
+	glDeleteBuffers(1, &ebo);
+	glfwTerminate();
 }
 
 int
@@ -80,7 +89,12 @@ main(void)
 	{
 		rect_shader.try_create_and_link();
 	}
-	catch (ShaderCompilationFailure err)
+	catch (ShaderCompileFailure err)
+	{
+		glfwTerminate();
+		return -1;
+	}
+	catch (ShaderLinkFailure err)
 	{
 		glfwTerminate();
 		return -1;
@@ -97,6 +111,7 @@ main(void)
 	unsigned int vbo;
 	// Generate element buffer object that stores vertex indices
 	unsigned int ebo;
+	size_t vert_stride = 8 * sizeof(float);
 	glGenBuffers(1, &vbo);
 	glGenBuffers(1, &ebo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -106,18 +121,52 @@ main(void)
 	glBufferData(
 		GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
 		GL_STATIC_DRAW);
+	
+	// Position attribute
 	glVertexAttribPointer(
-		0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+		0, 3, GL_FLOAT, GL_FALSE, vert_stride, (void *)0);
 	glEnableVertexAttribArray(0);
+	// Color attribute
+	glVertexAttribPointer(
+		1, 3, GL_FLOAT, GL_FALSE, vert_stride,
+		(void *)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	// Texture coordinates attribute
+	glVertexAttribPointer(
+		2, 2, GL_FLOAT, GL_FALSE, vert_stride,
+		(void *)(6 * sizeof(float)));;
+	glEnableVertexAttribArray(2);
+	
+	// Generate texture
+	Image image("assets/container.jpg");
+	try
+	{
+		image.try_load();
+	}
+	catch (ImageLoadFailure failure)
+	{
+		std::cout
+			<< "Failed to load texture." << failure.filename
+			<< std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	unsigned int tex;
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGB, image.width(), image.height(), 0,
+		GL_RGB, GL_UNSIGNED_BYTE, image.data());
+	glGenerateMipmap(GL_TEXTURE_2D);
 
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
 	{
 		handle_input(window);
-		
-		// Calculate uniform
-		float time = glfwGetTime();
-		float time_val = (sin(time) / 2.0f) + 0.5f;
 		
 		// Clear the drawing buffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -125,10 +174,8 @@ main(void)
 		
 		// Draw the triangle
 		rect_shader.use();
-		glUniform4f(
-			rect_shader.get_uniform_location("appColor"),
-			time_val, time_val, time_val, 1.0f);
 		glBindVertexArray(vao);
+		glBindTexture(GL_TEXTURE_2D, tex);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		
@@ -136,6 +183,7 @@ main(void)
 		glfwPollEvents();
 	}
 	
-	glfwTerminate();
+	do_exit_cleanup(vao, vbo, ebo);
+	
 	return 0;
 }
