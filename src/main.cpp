@@ -194,9 +194,9 @@ main(void)
 		
 		// Set textures for the rect shader
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindTexture(GL_TEXTURE_2D, tex);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, 1);
+		glBindTexture(GL_TEXTURE_2D, tex2);
 		
 		// Use the shader and set the sampler uniforms
 		rect_shader.use();
