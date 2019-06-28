@@ -231,24 +231,41 @@ main(void)
 	glEnable(GL_DEPTH_TEST);
 	
 	// Apply initial rotation to model based on elapsed time
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::rotate(
-		model, (float)glfwGetTime() * glm::radians(50.0f),
+	glm::mat4 model = glm::rotate(
+		glm::mat4(1.0f), (float)glfwGetTime() * glm::radians(50.0f),
 		glm::vec3(0.5f, 1.0f, 0.0f));
 	
-	// Translate in reverse direction of where we want to move
-	glm::mat4 view = glm::mat4(1.0f);
-	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-	
-	// Apply perspective transform
+	// Generate perspective projection
 	glm::mat4 projection = glm::perspective(
 		glm::radians(45.0f), (float)WIN_RES_X / (float)WIN_RES_Y, 0.1f,
 		100.0f);
+	
+	// Calculate camera direction
+	glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 camera_tgt = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 camera_dir = glm::normalize(camera_pos - camera_tgt);
+	
+	// Get the right vector from a cross product of the up vector and the
+	// camera direction
+	glm::vec3 world_up = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::vec3 camera_right =
+		glm::normalize(glm::cross(world_up, camera_dir));
+	
+	glm::vec3 camera_up = glm::cross(camera_dir, camera_right);
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
 	{
 		handle_input(window);
+		
+		// Generate a `look at` matrix from position, target & up vector
+		float radius = 10.0f;
+		float cam_x = sin(glfwGetTime()) * radius;
+		float cam_z = cos(glfwGetTime()) * radius;
+		glm::mat4 view = glm::lookAt(
+			glm::vec3(cam_x, 0.0f, cam_z),
+			glm::vec3(0.0f, 0.0f, 0.0f),
+			glm::vec3(0.0f, 1.0f, 0.0f));
 		
 		// Clear the drawing buffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
