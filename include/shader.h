@@ -1,6 +1,8 @@
 #ifndef LANDSCAPE_SHADER_H
 #define LANDSCAPE_SHADER_H
 
+#include <glm/glm.hpp>
+
 class Shader
 {
 public:
@@ -8,6 +10,7 @@ public:
 	void try_create_and_link(void);
 	unsigned int get_id(void);
 	void set_uniform(const char *name, int value);
+	void set_uniform(const char *name, glm::mat4 matrix);
 	unsigned int get_uniform_location(const char *uniform);
 	void use(void);
 private:

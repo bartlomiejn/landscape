@@ -2,18 +2,55 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <shader.h>
 #include <image.h>
 
 #define WIN_RES_X 800
 #define WIN_RES_Y 600
 
-float vertices[] = {
-	// positions         // colors          // texture coords
-	0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-	0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-	-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-	-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
+float cube_verts[] = {
+	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+	0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+	
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+	0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	
+	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	
+	0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+	0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+	0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
 
 unsigned int indices[] = {
@@ -118,29 +155,24 @@ main(void)
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(
-		GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		GL_ARRAY_BUFFER, sizeof(cube_verts), cube_verts, GL_STATIC_DRAW);
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(
 		GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
 		GL_STATIC_DRAW);
 	
-	size_t vert_stride = 8 * sizeof(float); // Stride value for `vertices`
+	size_t vert_stride = 5 * sizeof(float); // Stride value for `vertices`
 	
 	// Position attribute
 	glVertexAttribPointer(
 		0, 3, GL_FLOAT, GL_FALSE, vert_stride, (void *)0);
 	glEnableVertexAttribArray(0);
-	// Color attribute
-	glVertexAttribPointer(
-		1, 3, GL_FLOAT, GL_FALSE, vert_stride,
-		(void *)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
 	// Texture coordinates attribute
 	glVertexAttribPointer(
-		2, 2, GL_FLOAT, GL_FALSE, vert_stride,
-		(void *)(6 * sizeof(float)));;
-	glEnableVertexAttribArray(2);
+		1, 2, GL_FLOAT, GL_FALSE, vert_stride,
+		(void *)(3 * sizeof(float)));;
+	glEnableVertexAttribArray(1);
 	
 	// Load images
 	Image image("assets/container.jpg");
@@ -183,14 +215,37 @@ main(void)
 		GL_RGBA, GL_UNSIGNED_BYTE, image2.data());
 	glGenerateMipmap(GL_TEXTURE_2D);
 	
+	glEnable(GL_DEPTH_TEST);
+	
+	// Apply initial rotation to model based on elapsed time
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::rotate(
+		model, (float)glfwGetTime() * glm::radians(50.0f),
+		glm::vec3(0.5f, 1.0f, 0.0f));
+	
+	// Translate in reverse direction of where we want to move
+	glm::mat4 view = glm::mat4(1.0f);
+	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+	
+	glm::mat4 projection = glm::perspective(
+		glm::radians(45.0f), (float)WIN_RES_X / (float)WIN_RES_Y, 0.1f,
+		100.0f);
+	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
 	{
 		handle_input(window);
 		
+		// Apply rotation animation
+		model = glm::rotate(
+			glm::mat4(1.0f), (float)glfwGetTime() * glm::radians(50.0f),
+			glm::vec3(0.5f, 1.0f, 0.0f));
+		
 		// Clear the drawing buffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_DEPTH_BUFFER_BIT);
 		
 		// Set textures for the rect shader
 		glActiveTexture(GL_TEXTURE0);
@@ -198,15 +253,20 @@ main(void)
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, tex2);
 		
-		// Use the shader and set the sampler uniforms
+		
+		
+		// Use the shader and set the texture & transformation uniforms
 		rect_shader.use();
 		rect_shader.set_uniform("texture1", 0);
 		rect_shader.set_uniform("texture2", 1);
+		rect_shader.set_uniform("model", model);
+		rect_shader.set_uniform("view", view);
+		rect_shader.set_uniform("projection", projection);
 		
 		// Draw the rect
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
