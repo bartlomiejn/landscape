@@ -77,10 +77,13 @@ float tex_coords[] = {
 	0.5f, 1.0f   // Top-center
 };
 
-float camera_speed = 0.005f;
+float mvmt_speed = 2.5f;
 glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+float delta_time = 0.0f; /// Time between current frame and last frame
+float last_frame = 0.0f; /// Time of last frame
 
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
@@ -91,20 +94,21 @@ on_fb_resize(GLFWwindow *window, int width, int height)
 void
 handle_input(GLFWwindow *window)
 {
+	float per_frame_speed = mvmt_speed * delta_time;
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera_pos += camera_speed * camera_front;
+		camera_pos += per_frame_speed * camera_front;
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera_pos -= camera_speed * camera_front;
+		camera_pos -= per_frame_speed * camera_front;
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		camera_pos -=
 			glm::normalize(glm::cross(camera_front, camera_up))
-			* camera_speed;
+			* per_frame_speed;
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera_pos +=
 			glm::normalize(glm::cross(camera_front, camera_up))
-			* camera_speed;
+			* per_frame_speed;
 }
 
 void
@@ -272,6 +276,10 @@ main(void)
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
 	{
+		float current_frame = glfwGetTime();
+		delta_time = current_frame - last_frame;
+		last_frame = current_frame;
+		
 		handle_input(window);
 		
 		glm::mat4 view = glm::lookAt(
