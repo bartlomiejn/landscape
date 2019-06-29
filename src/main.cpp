@@ -77,13 +77,19 @@ float tex_coords[] = {
 	0.5f, 1.0f   // Top-center
 };
 
+float delta_time = 0.0f; /// Time between current frame and last frame
+float last_frame = 0.0f; /// Time of last frame
+
 float mvmt_speed = 2.5f;
 glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
+float camera_yaw = 0.0f;
+float camera_pitch = 0.0f;
 
-float delta_time = 0.0f; /// Time between current frame and last frame
-float last_frame = 0.0f; /// Time of last frame
+float mouse_last_x = WIN_RES_X / 2;
+float mouse_last_y = WIN_RES_Y / 2;
+float mouse_sensitivity = 0.05f;
 
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
@@ -92,7 +98,43 @@ on_fb_resize(GLFWwindow *window, int width, int height)
 }
 
 void
-handle_input(GLFWwindow *window)
+handle_mouse_input(GLFWwindow *window, double x_pos, double y_pos)
+{
+	static bool is_first_mouse = true;
+	if (is_first_mouse)
+	{
+		mouse_last_x = x_pos;
+		mouse_last_y = y_pos;
+		is_first_mouse = false;
+	}
+	
+	float x_offset = x_pos - mouse_last_x;
+	float y_offset = mouse_last_y - y_pos;
+	mouse_last_x = x_pos;
+	mouse_last_y = y_pos;
+	
+	x_offset *= mouse_sensitivity;
+	y_offset *= mouse_sensitivity;
+	
+	camera_yaw += x_offset;
+	camera_pitch += y_offset;
+	
+	if (camera_pitch > 89.0f)
+		camera_pitch = 89.0f;
+	if (camera_pitch < -89.0f)
+		camera_pitch = -89.0f;
+	
+	glm::vec3 front;
+	front.x =
+		cos(glm::radians(camera_pitch)) * cos(glm::radians(camera_yaw));
+	front.y = sin(glm::radians(camera_pitch));
+	front.z =
+		cos(glm::radians(camera_pitch)) * sin(glm::radians(camera_yaw));
+	camera_front = glm::normalize(front);
+}
+
+void
+handle_keyboard_input(GLFWwindow *window)
 {
 	float per_frame_speed = mvmt_speed * delta_time;
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -143,6 +185,8 @@ main(void)
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, on_fb_resize);
+	glfwSetCursorPosCallback(window, handle_mouse_input);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	
 	// Load GLAD
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -280,7 +324,7 @@ main(void)
 		delta_time = current_frame - last_frame;
 		last_frame = current_frame;
 		
-		handle_input(window);
+		handle_keyboard_input(window);
 		
 		glm::mat4 view = glm::lookAt(
 			camera_pos, camera_pos + camera_front, camera_up);
