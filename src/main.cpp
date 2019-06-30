@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <shader.h>
 #include <image.h>
+#include <camera.h>
 
 #define WIN_RES_X 800
 #define WIN_RES_Y 600
@@ -80,16 +81,18 @@ float tex_coords[] = {
 float delta_time = 0.0f; /// Time between current frame and last frame
 float last_frame = 0.0f; /// Time of last frame
 
-float mvmt_speed = 2.5f;
-glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
-float camera_yaw = 0.0f;
-float camera_pitch = 0.0f;
-
 float mouse_last_x = WIN_RES_X / 2;
 float mouse_last_y = WIN_RES_Y / 2;
 float mouse_sensitivity = 0.05f;
+
+float movement_speed = 2.5f;
+
+Camera camera(
+	glm::vec3(0.0f, 0.0f, 3.0f), // Position
+	glm::vec3(0.0f, 1.0f, 0.0f), // World up vector
+	0.0f, // Yaw
+	0.0f, // Pitch
+	45.0f); // FOV
 
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
@@ -98,7 +101,7 @@ on_fb_resize(GLFWwindow *window, int width, int height)
 }
 
 void
-handle_mouse_input(GLFWwindow *window, double x_pos, double y_pos)
+handle_mouse_movement(GLFWwindow *window, double x_pos, double y_pos)
 {
 	static bool is_first_mouse = true;
 	if (is_first_mouse)
@@ -116,41 +119,29 @@ handle_mouse_input(GLFWwindow *window, double x_pos, double y_pos)
 	x_offset *= mouse_sensitivity;
 	y_offset *= mouse_sensitivity;
 	
-	camera_yaw += x_offset;
-	camera_pitch += y_offset;
-	
-	if (camera_pitch > 89.0f)
-		camera_pitch = 89.0f;
-	if (camera_pitch < -89.0f)
-		camera_pitch = -89.0f;
-	
-	glm::vec3 front;
-	front.x =
-		cos(glm::radians(camera_pitch)) * cos(glm::radians(camera_yaw));
-	front.y = sin(glm::radians(camera_pitch));
-	front.z =
-		cos(glm::radians(camera_pitch)) * sin(glm::radians(camera_yaw));
-	camera_front = glm::normalize(front);
+	camera.rotate(x_offset, y_offset);
+}
+
+void
+handle_mouse_scroll(GLFWwindow *window, double x_offset, double y_offset)
+{
+	camera.zoom_in(y_offset);
 }
 
 void
 handle_keyboard_input(GLFWwindow *window)
 {
-	float per_frame_speed = mvmt_speed * delta_time;
+	float per_frame_speed = movement_speed * delta_time;
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera_pos += per_frame_speed * camera_front;
+		camera.move(direction_forward, per_frame_speed);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera_pos -= per_frame_speed * camera_front;
+		camera.move(direction_backward, per_frame_speed);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera_pos -=
-			glm::normalize(glm::cross(camera_front, camera_up))
-			* per_frame_speed;
+		camera.move(direction_left, per_frame_speed);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera_pos +=
-			glm::normalize(glm::cross(camera_front, camera_up))
-			* per_frame_speed;
+		camera.move(direction_right, per_frame_speed);
 }
 
 void
@@ -185,7 +176,8 @@ main(void)
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, on_fb_resize);
-	glfwSetCursorPosCallback(window, handle_mouse_input);
+	glfwSetCursorPosCallback(window, handle_mouse_movement);
+	glfwSetScrollCallback(window, handle_mouse_scroll);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	
 	// Load GLAD
@@ -301,21 +293,8 @@ main(void)
 	
 	// Generate perspective projection
 	glm::mat4 projection = glm::perspective(
-		glm::radians(45.0f), (float)WIN_RES_X / (float)WIN_RES_Y, 0.1f,
-		100.0f);
-	
-//	// Calculate camera direction
-//	glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
-//	glm::vec3 camera_tgt = glm::vec3(0.0f, 0.0f, 0.0f);
-//	glm::vec3 camera_dir = glm::normalize(camera_pos - camera_tgt);
-//
-//	// Get the right vector from a cross product of the up vector and the
-//	// camera direction
-//	glm::vec3 world_up = glm::vec3(0.0f, 1.0f, 0.0f);
-//	glm::vec3 camera_right =
-//		glm::normalize(glm::cross(world_up, camera_dir));
-//
-//	glm::vec3 camera_up = glm::cross(camera_dir, camera_right);
+		glm::radians(camera.fov()), (float)WIN_RES_X / (float)WIN_RES_Y,
+		0.1f, 100.0f);
 
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
@@ -326,8 +305,7 @@ main(void)
 		
 		handle_keyboard_input(window);
 		
-		glm::mat4 view = glm::lookAt(
-			camera_pos, camera_pos + camera_front, camera_up);
+		glm::mat4 view = camera.view_matrix();
 		
 		// Clear the drawing buffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
