@@ -191,10 +191,12 @@ main(void)
 	on_fb_resize(nullptr, WIN_RES_X, WIN_RES_Y);
 	
 	// Compile and link triangle shader
-	Shader rect_shader("glsl/vertex.glsl", "glsl/frag.glsl");
+	Shader material_shader("glsl/vertex.glsl", "glsl/material.glsl");
+	Shader light_shader("glsl/vertex.glsl", "glsl/light.glsl");
 	try
 	{
-		rect_shader.try_create_and_link();
+		material_shader.try_create_and_link();
+		light_shader.try_create_and_link();
 	}
 	catch (ShaderCompileFailure err)
 	{
@@ -216,86 +218,35 @@ main(void)
 	// Generate element buffer object that stores vertex indices
 	unsigned int ebo;
 	
+	size_t vert_stride = 5 * sizeof(float); // Stride value for `vertices`
+	
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
-	glGenBuffers(1, &ebo);
-	
 	glBindVertexArray(vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(
 		GL_ARRAY_BUFFER, sizeof(cube_verts), cube_verts, GL_STATIC_DRAW);
-	
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(
-		GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-		GL_STATIC_DRAW);
-	
-	size_t vert_stride = 5 * sizeof(float); // Stride value for `vertices`
-	
-	// Position attribute
+
+	// Vertex position attribute
 	glVertexAttribPointer(
 		0, 3, GL_FLOAT, GL_FALSE, vert_stride, (void *)0);
 	glEnableVertexAttribArray(0);
-	// Texture coordinates attribute
+	
+	uint light_vao;
+	glGenVertexArrays(1, &light_vao);
+	glBindVertexArray(light_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	
+	// Vertex position attribute
 	glVertexAttribPointer(
-		1, 2, GL_FLOAT, GL_FALSE, vert_stride,
-		(void *)(3 * sizeof(float)));;
-	glEnableVertexAttribArray(1);
-	
-	// Load images
-	Image image("assets/container.jpg");
-	Image image2("assets/awesomeface.png");
-	try
-	{
-		image.try_load();
-		image2.try_load();
-	}
-	catch (ImageLoadFailure failure)
-	{
-		std::cout
-			<< "Failed to load texture." << failure.filename
-			<< std::endl;
-		glfwTerminate();
-		return -1;
-	}
-	
-	// Generate textures
-	unsigned int tex;
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGB, image.width(), image.height(), 0,
-		GL_RGB, GL_UNSIGNED_BYTE, image.data());
-	glGenerateMipmap(GL_TEXTURE_2D);
-	unsigned int tex2;
-	glGenTextures(1, &tex2);
-	glBindTexture(GL_TEXTURE_2D, tex2);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA, image2.width(), image2.height(), 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, image2.data());
-	glGenerateMipmap(GL_TEXTURE_2D);
+		0, 3, GL_FLOAT, GL_FALSE, vert_stride, (void*)0);
+	glEnableVertexAttribArray(0);
 	
 	glEnable(GL_DEPTH_TEST);
 	
-	// Apply initial rotation to model based on elapsed time
-	glm::mat4 model = glm::rotate(
-		glm::mat4(1.0f), (float)glfwGetTime() * glm::radians(50.0f),
-		glm::vec3(0.5f, 1.0f, 0.0f));
+	glm::vec3 light_pos(1.2f, 1.0f, 2.0f);
 	
-	// Generate perspective projection
-	glm::mat4 projection = glm::perspective(
-		glm::radians(camera.fov()), (float)WIN_RES_X / (float)WIN_RES_Y,
-		0.1f, 100.0f);
-
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -305,7 +256,15 @@ main(void)
 		
 		handle_keyboard_input(window);
 		
+		// Generate view matrix
 		glm::mat4 view = camera.view_matrix();
+		
+		// Generate perspective projection
+		glm::mat4 projection = glm::perspective(
+			glm::radians(camera.fov()),
+			(float)WIN_RES_X / (float)WIN_RES_Y,
+			0.1f,
+			100.0f);
 		
 		// Clear the drawing buffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -313,25 +272,20 @@ main(void)
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		
-		// Set textures for the shader
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, tex2);
-		
 		// Use the shader and set the texture & transformation uniforms
-		rect_shader.use();
-		rect_shader.set_uniform("texture1", 0);
-		rect_shader.set_uniform("texture2", 1);
-		rect_shader.set_uniform("view", view);
-		rect_shader.set_uniform("projection", projection);
+		material_shader.use();
+		material_shader.set_uniform("view", view);
+		material_shader.set_uniform("projection", projection);
+		material_shader.set_uniform(
+			"object_color", glm::vec3(1.0f, 0.5f, 0.31f));
+		material_shader.set_uniform(
+			"light_color", glm::vec3(1.0f, 1.0f, 1.0f));
 		
 		// Draw the models
 		glBindVertexArray(vao);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 		for (unsigned int i = 0; i < 10; i++)
 		{
-			glm::mat4 model = glm::mat4(1.0f);
+			glm::mat4 model(1.0f);
 			model = glm::translate(model, cube_positions[i]);
 			float angle = 20.0f * i;
 			float rotation =
@@ -339,9 +293,20 @@ main(void)
 				+ glm::radians(angle);
 			model = glm::rotate(
 				model, rotation, glm::vec3(0.5f, 1.0f, 0.0f));
-			rect_shader.set_uniform("model", model);
+			material_shader.set_uniform("model", model);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+		
+		// Draw the lamp cube
+		glm::mat4 model(1.0f);
+		model = glm::translate(model, light_pos);
+		model = glm::scale(model, glm::vec3(0.2f));
+		light_shader.use();
+		light_shader.set_uniform("model", model);
+		light_shader.set_uniform("view", view);
+		light_shader.set_uniform("projection", projection);
+		glBindVertexArray(light_vao);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();

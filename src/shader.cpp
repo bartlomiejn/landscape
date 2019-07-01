@@ -92,6 +92,13 @@ Shader::set_uniform(const char *name, glm::mat4 matrix)
 	glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
+void
+Shader::set_uniform(const char *name, glm::vec3 vec)
+{
+	int model_loc = get_uniform_location(name);
+	glUniform3f(model_loc, vec.x, vec.y, vec.z);
+}
+
 unsigned int
 Shader::get_uniform_location(const char *uniform)
 {

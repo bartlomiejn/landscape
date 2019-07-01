@@ -63,8 +63,12 @@ configure_file(
         ${CMAKE_BINARY_DIR}/output/glsl/vertex.glsl
         COPYONLY)
 configure_file(
-        ${PROJECT_SOURCE_DIR}/src/glsl/frag.glsl
-        ${CMAKE_BINARY_DIR}/output/glsl/frag.glsl
+        ${PROJECT_SOURCE_DIR}/src/glsl/material.glsl
+        ${CMAKE_BINARY_DIR}/output/glsl/material.glsl
+        COPYONLY)
+configure_file(
+        ${PROJECT_SOURCE_DIR}/src/glsl/light.glsl
+        ${CMAKE_BINARY_DIR}/output/glsl/light.glsl
         COPYONLY)
 
 # Image assets
