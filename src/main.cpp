@@ -12,47 +12,47 @@
 
 // Position, Surface normal
 float cube_verts[] = {
--0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
--0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
--0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-
--0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
--0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
--0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-
--0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
--0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
--0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
--0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
--0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
--0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-
-0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-
--0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
--0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
--0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-
--0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
--0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
--0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+	
+	0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+	0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+	0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+	
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+	0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+	0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+	
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+	0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+	0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 };
 
 glm::vec3 cube_positions[] = {
@@ -236,7 +236,8 @@ main(void)
 	glEnableVertexAttribArray(0);
 	// Vertex normal attribute
 	glVertexAttribPointer(
-		1, 3, GL_FLOAT, GL_FALSE, vert_stride, (void *)(3 * sizeof(float)));
+		1, 3, GL_FLOAT, GL_FALSE, vert_stride,
+		(void *)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 	
 	uint light_vao;
@@ -282,15 +283,23 @@ main(void)
 		material_shader.use();
 		material_shader.set_uniform("view", view);
 		material_shader.set_uniform("projection", projection);
+		
 		material_shader.set_uniform(
-			"object_color", glm::vec3(1.0f, 0.5f, 0.31f));
-		material_shader.set_uniform("ambient_strength", 0.2f);
+			"material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
 		material_shader.set_uniform(
-			"ambient_color", glm::vec3(1.0f, 1.0f, 1.0f));
-		material_shader.set_uniform("light_pos", light_pos);
+			"material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
 		material_shader.set_uniform(
-			"light_color", glm::vec3(1.0f, 1.0f, 1.0f));
-		material_shader.set_uniform("specular_strength", 0.5f);
+			"material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+		material_shader.set_uniform("material.shininess", 32.0f);
+		
+		material_shader.set_uniform("light.position", light_pos);
+		material_shader.set_uniform(
+			"light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		material_shader.set_uniform(
+			"light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+		material_shader.set_uniform(
+			"light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		
 		material_shader.set_uniform("view_pos", camera.position());
 		
 		// Draw the cubes
