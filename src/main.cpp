@@ -10,48 +10,49 @@
 #define WIN_RES_X 800
 #define WIN_RES_Y 600
 
+// Position, Surface normal
 float cube_verts[] = {
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-	0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-	0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-	
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-	0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-	0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	
-	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	
-	0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-	0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-	0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-	0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 };
 
 glm::vec3 cube_positions[] = {
@@ -218,7 +219,8 @@ main(void)
 	// Generate element buffer object that stores vertex indices
 	unsigned int ebo;
 	
-	size_t vert_stride = 5 * sizeof(float); // Stride value for `vertices`
+	// Stride value for `vertices`
+	size_t vert_stride = 6 * sizeof(float);
 	
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
@@ -232,13 +234,17 @@ main(void)
 	glVertexAttribPointer(
 		0, 3, GL_FLOAT, GL_FALSE, vert_stride, (void *)0);
 	glEnableVertexAttribArray(0);
+	// Vertex normal attribute
+	glVertexAttribPointer(
+		1, 3, GL_FLOAT, GL_FALSE, vert_stride, (void *)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 	
 	uint light_vao;
 	glGenVertexArrays(1, &light_vao);
 	glBindVertexArray(light_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	
-	// Vertex position attribute
+	// Only use the vertex position attribute
 	glVertexAttribPointer(
 		0, 3, GL_FLOAT, GL_FALSE, vert_stride, (void*)0);
 	glEnableVertexAttribArray(0);
@@ -278,6 +284,10 @@ main(void)
 		material_shader.set_uniform("projection", projection);
 		material_shader.set_uniform(
 			"object_color", glm::vec3(1.0f, 0.5f, 0.31f));
+		material_shader.set_uniform("ambient_strength", 0.2f);
+		material_shader.set_uniform(
+			"ambient_color", glm::vec3(1.0f, 1.0f, 1.0f));
+		material_shader.set_uniform("light_pos", light_pos);
 		material_shader.set_uniform(
 			"light_color", glm::vec3(1.0f, 1.0f, 1.0f));
 		

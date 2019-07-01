@@ -86,6 +86,12 @@ Shader::set_uniform(const char *name, int value)
 }
 
 void
+Shader::set_uniform(const char *name, float value)
+{
+	glUniform1f(get_uniform_location(name), value);
+}
+
+void
 Shader::set_uniform(const char *name, glm::mat4 matrix)
 {
 	int model_loc = get_uniform_location(name);

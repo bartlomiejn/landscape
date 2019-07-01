@@ -10,6 +10,7 @@ public:
 	void try_create_and_link(void);
 	unsigned int get_id(void);
 	void set_uniform(const char *name, int value);
+	void set_uniform(const char *name, float value);
 	void set_uniform(const char *name, glm::mat4 matrix);
 	void set_uniform(const char *name, glm::vec3 vec);
 	unsigned int get_uniform_location(const char *uniform);
