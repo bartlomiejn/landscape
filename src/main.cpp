@@ -278,7 +278,7 @@ main(void)
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		
-		// Use the shader and set the texture & transformation uniforms
+		// Use the shader and configure uniforms
 		material_shader.use();
 		material_shader.set_uniform("view", view);
 		material_shader.set_uniform("projection", projection);
@@ -290,8 +290,10 @@ main(void)
 		material_shader.set_uniform("light_pos", light_pos);
 		material_shader.set_uniform(
 			"light_color", glm::vec3(1.0f, 1.0f, 1.0f));
+		material_shader.set_uniform("specular_strength", 0.5f);
+		material_shader.set_uniform("view_pos", camera.position());
 		
-		// Draw the models
+		// Draw the cubes
 		glBindVertexArray(vao);
 		for (unsigned int i = 0; i < 10; i++)
 		{
