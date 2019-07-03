@@ -1,4 +1,4 @@
-#include <image.h>
+#include <graphics/image.h>
 #include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>

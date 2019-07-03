@@ -44,9 +44,9 @@ set(SOURCES
         ${SOURCES_GLAD}
         src/main.cpp
         src/file_loader.cpp
-        src/shader.cpp
-        src/image.cpp
-        src/camera.cpp)
+        src/graphics/shader.cpp
+        src/graphics/image.cpp
+        src/graphics/camera.cpp src/graphics/texture.cpp)
 
 add_executable(landscape ${SOURCES})
 add_dependencies(landscape glfw glm)

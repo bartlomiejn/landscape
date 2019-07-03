@@ -3,14 +3,14 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <shader.h>
-#include <image.h>
-#include <camera.h>
+#include <graphics/shader.h>
+#include <graphics/image.h>
+#include <graphics/camera.h>
+#include <graphics/texture.h>
 
 #define WIN_RES_X 800
 #define WIN_RES_Y 600
 
-// Position, Surface normal
 float cube_verts[] = {
 	// positions          // normals           // texture coords
 	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -228,30 +228,8 @@ main(void)
 	}
 	
 	// Generate textures
-	unsigned int diffuse_map;
-	glGenTextures(1, &diffuse_map);
-	glBindTexture(GL_TEXTURE_2D, diffuse_map);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA, diff_img.width(),
-		diff_img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
-		diff_img.data());
-	glGenerateMipmap(GL_TEXTURE_2D);
-	unsigned int specular_map;
-	glGenTextures(1, &specular_map);
-	glBindTexture(GL_TEXTURE_2D, specular_map);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA, spec_img.width(),
-		spec_img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
-		spec_img.data());
-	glGenerateMipmap(GL_TEXTURE_2D);
+	Texture container_diffuse(diff_img, layout_rgba);
+	Texture container_specular(spec_img, layout_rgba);
 	
 	// Generate vertex array object which stores vertex attribute configs
 	// and associated VBOs
@@ -332,14 +310,6 @@ main(void)
 		material_shader.set_uniform("view", view);
 		material_shader.set_uniform("projection", projection);
 		
-		material_shader.set_uniform(
-			"material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
-		material_shader.set_uniform(
-			"material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-		material_shader.set_uniform(
-			"material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-		material_shader.set_uniform("material.shininess", 32.0f);
-		
 		material_shader.set_uniform("light.position", light_pos);
 		material_shader.set_uniform(
 			"light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
@@ -349,17 +319,17 @@ main(void)
 			"light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 		
 		material_shader.set_uniform("view_pos", camera.position());
+		
 		material_shader.set_uniform(
 			"material.diffuse", 0);
 		material_shader.set_uniform(
 			"material.specular", 1);
+		material_shader.set_uniform("material.shininess", 32.0f);
 		
 		// Draw the cubes
 		glBindVertexArray(vao);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, diffuse_map);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, specular_map);
+		container_diffuse.use(GL_TEXTURE0);
+		container_specular.use(GL_TEXTURE1);
 		for (unsigned int i = 0; i < 10; i++)
 		{
 			glm::mat4 model(1.0f);

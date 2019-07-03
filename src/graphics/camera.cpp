@@ -1,4 +1,4 @@
-#include <camera.h>
+#include <graphics/camera.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 // Public
