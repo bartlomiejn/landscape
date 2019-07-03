@@ -1,6 +1,5 @@
 #include <graphics/texture.h>
 
-
 Texture::Texture(Image image, ColorLayout layout)
 {
 	GLenum format;

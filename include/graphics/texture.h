@@ -15,7 +15,8 @@ class Texture
 public:
 	/// Generates an OpenGL texture from provided image.
 	///
-	/// \param image Image to create a texture from. Should be loaded before use.
+	/// \param image Image to create a texture from. Should be loaded before
+	/// use.
 	/// \param layout Color layout to use.
 	Texture(Image image, ColorLayout layout);
 	

@@ -111,12 +111,6 @@ Shader::get_uniform_location(const char *uniform)
 	return glGetUniformLocation(id, uniform);
 }
 
-unsigned int
-Shader::get_id(void)
-{
-	return id;
-}
-
 void
 Shader::use(void)
 {

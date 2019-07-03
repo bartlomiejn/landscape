@@ -7,6 +7,7 @@
 #include <graphics/image.h>
 #include <graphics/camera.h>
 #include <graphics/texture.h>
+#include <graphics/light.h>
 
 #define WIN_RES_X 800
 #define WIN_RES_Y 600
@@ -146,15 +147,6 @@ handle_keyboard_input(GLFWwindow *window)
 		camera.move(direction_right, per_frame_speed);
 }
 
-void
-do_exit_cleanup(uint vao, uint vbo, uint ebo)
-{
-	glDeleteVertexArrays(1, &vao);
-	glDeleteBuffers(1, &vbo);
-	glDeleteBuffers(1, &ebo);
-	glfwTerminate();
-}
-
 int
 main(void)
 {
@@ -278,7 +270,17 @@ main(void)
 	
 	glEnable(GL_DEPTH_TEST);
 	
-	glm::vec3 light_pos(1.2f, 1.0f, 2.0f);
+	DirectionalLight dir_light(
+		glm::vec3(-0.2f, -1.0f, -0.3f), // Direction
+		glm::vec3(0.2f, 0.2f, 0.2f), 	// Ambient
+		glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
+		glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
+	
+	PointLight pt_light(
+		glm::vec3(1.2f, 1.0f, 2.0f), 	// Position
+		glm::vec3(0.2f, 0.2f, 0.2f), 	// Ambient
+		glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
+		glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
@@ -312,23 +314,24 @@ main(void)
 		material_shader.set_uniform("projection", projection);
 		
 		// Point light
-		material_shader.set_uniform("pt_light.position", light_pos);
 		material_shader.set_uniform(
-			"pt_light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+			"pt_light.position", pt_light.position);
 		material_shader.set_uniform(
-			"pt_light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+			"pt_light.ambient", pt_light.ambient);
 		material_shader.set_uniform(
-			"pt_light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+			"pt_light.diffuse", pt_light.diffuse);
+		material_shader.set_uniform(
+			"pt_light.specular", pt_light.specular);
 		
 		// Directional light
 		material_shader.set_uniform(
-			"dir_light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+			"dir_light.direction", dir_light.direction);
 		material_shader.set_uniform(
-			"dir_light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+			"dir_light.ambient", dir_light.ambient);
 		material_shader.set_uniform(
-			"dir_light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+			"dir_light.diffuse", dir_light.diffuse);
 		material_shader.set_uniform(
-			"dir_light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+			"dir_light.specular", dir_light.specular);
 		
 		// Material
 		material_shader.set_uniform(
@@ -357,7 +360,7 @@ main(void)
 		
 		// Draw the lamp cube
 		glm::mat4 model(1.0f);
-		model = glm::translate(model, light_pos);
+		model = glm::translate(model, pt_light.position);
 		model = glm::scale(model, glm::vec3(0.2f));
 		light_shader.use();
 		light_shader.set_uniform("model", model);
@@ -370,7 +373,11 @@ main(void)
 		glfwPollEvents();
 	}
 	
-	do_exit_cleanup(vao, vbo, ebo);
+	glDeleteVertexArrays(1, &vao);
+	glDeleteVertexArrays(1, &light_vao);
+	glDeleteBuffers(1, &vbo);
+	glDeleteBuffers(1, &ebo);
+	glfwTerminate();
 	
 	return 0;
 }

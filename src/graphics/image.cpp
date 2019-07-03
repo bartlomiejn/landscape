@@ -19,6 +19,7 @@ void Image::try_load()
 
 Image::~Image()
 {
+	// TODO: Fix the bug that crashes the app on quitting here
 	stbi_image_free(img_data);
 }
 
