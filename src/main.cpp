@@ -169,7 +169,7 @@ main(void)
 	
 	// Setup GLFW window
 	GLFWwindow* window = glfwCreateWindow(
-		WIN_RES_X, WIN_RES_Y, "Landscape Engine", NULL, NULL);
+		WIN_RES_X, WIN_RES_Y, "Landscape", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window." << std::endl;
@@ -305,21 +305,32 @@ main(void)
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		
-		// Use the shader and configure uniforms
+		// Use the shader and configure transformation uniforms
 		material_shader.use();
 		material_shader.set_uniform("view", view);
+		material_shader.set_uniform("view_pos", camera.position());
 		material_shader.set_uniform("projection", projection);
 		
-		material_shader.set_uniform("light.position", light_pos);
+		// Point light
+		material_shader.set_uniform("pt_light.position", light_pos);
 		material_shader.set_uniform(
-			"light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+			"pt_light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
 		material_shader.set_uniform(
-			"light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+			"pt_light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
 		material_shader.set_uniform(
-			"light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+			"pt_light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 		
-		material_shader.set_uniform("view_pos", camera.position());
+		// Directional light
+		material_shader.set_uniform(
+			"dir_light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+		material_shader.set_uniform(
+			"dir_light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		material_shader.set_uniform(
+			"dir_light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+		material_shader.set_uniform(
+			"dir_light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 		
+		// Material
 		material_shader.set_uniform(
 			"material.diffuse", 0);
 		material_shader.set_uniform(
