@@ -212,10 +212,12 @@ main(void)
 	}
 	
 	// Load diffuse map
-	Image diffuse_img("assets/container2.png");
+	Image diff_img("assets/container2_diff.png");
+	Image spec_img("assets/container2_spec.png");
 	try
 	{
-		diffuse_img.try_load();
+		diff_img.try_load();
+		spec_img.try_load();
 	}
 	catch (ImageLoadFailure err)
 	{
@@ -234,9 +236,21 @@ main(void)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA, diffuse_img.width(),
-		diffuse_img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
-		diffuse_img.data());
+		GL_TEXTURE_2D, 0, GL_RGBA, diff_img.width(),
+		diff_img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
+		diff_img.data());
+	glGenerateMipmap(GL_TEXTURE_2D);
+	unsigned int specular_map;
+	glGenTextures(1, &specular_map);
+	glBindTexture(GL_TEXTURE_2D, specular_map);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGBA, spec_img.width(),
+		spec_img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
+		spec_img.data());
 	glGenerateMipmap(GL_TEXTURE_2D);
 	
 	// Generate vertex array object which stores vertex attribute configs
@@ -335,12 +349,17 @@ main(void)
 			"light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 		
 		material_shader.set_uniform("view_pos", camera.position());
-		material_shader.set_uniform("material.diffuse", 0);
+		material_shader.set_uniform(
+			"material.diffuse", 0);
+		material_shader.set_uniform(
+			"material.specular", 1);
 		
 		// Draw the cubes
 		glBindVertexArray(vao);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, diffuse_map);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, specular_map);
 		for (unsigned int i = 0; i < 10; i++)
 		{
 			glm::mat4 model(1.0f);

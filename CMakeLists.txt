@@ -77,8 +77,12 @@ configure_file(
         ${CMAKE_BINARY_DIR}/output/assets/container.jpg
         COPYONLY)
 configure_file(
-        ${PROJECT_SOURCE_DIR}/assets/container2.png
-        ${CMAKE_BINARY_DIR}/output/assets/container2.png
+        ${PROJECT_SOURCE_DIR}/assets/container2_diff.png
+        ${CMAKE_BINARY_DIR}/output/assets/container2_diff.png
+        COPYONLY)
+configure_file(
+        ${PROJECT_SOURCE_DIR}/assets/container2_spec.png
+        ${CMAKE_BINARY_DIR}/output/assets/container2_spec.png
         COPYONLY)
 configure_file(
         ${PROJECT_SOURCE_DIR}/assets/awesomeface.png
