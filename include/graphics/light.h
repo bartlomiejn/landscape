@@ -51,6 +51,17 @@ public:
 class SpotLight
 {
 public:
+	/// Creates a spot light.
+	///
+	/// \param pos Position of the light
+	/// \param dir Direction of the light
+	/// \param amb Ambient light component
+	/// \param diff Diffuse component
+	/// \param spec Specular component
+	/// \param cutoff_cosine Cosine of the cutoff angle in radians
+	/// \param att_const Attenuation constant parameter
+	/// \param att_lin Attenuation linear parameter
+	/// \param att_quad Attenuation quadratic parameter
 	SpotLight(
 		glm::vec3 pos, glm::vec3 dir, glm::vec3 amb, glm::vec3 diff,
 		glm::vec3 spec, float cutoff_cosine, float att_const = 1.0,

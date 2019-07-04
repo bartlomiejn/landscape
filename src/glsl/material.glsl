@@ -68,19 +68,21 @@ vec3 dir_light_contribution(DirLight light, vec3 normal, vec3 view_dir)
 	// Specular
 	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
 	vec3 specular =
-		vec3(texture(material.specular, tex_coords)) * spec * light.specular;
+		vec3(texture(material.specular, tex_coords))
+		* spec
+		* light.specular;
 
 	return (ambient + diffuse + specular);
 }
 
 vec3 pt_light_contribution(
-	PointLight light, vec3 normal, vec3 view_dir, vec3 frag_pos
+PointLight light, vec3 normal, vec3 view_dir, vec3 frag_pos
 ){
 	vec3 light_dir = normalize(light.position - frag_pos);
 	vec3 reflect_dir = reflect(-light_dir, normal);
 	float distance = length(light.position - frag_pos);
 	float attenuation = 1.0 / (light.constant + light.linear * distance
-		+ light.quadratic * (distance * distance));
+	+ light.quadratic * (distance * distance));
 
 	// Ambient
 	vec3 ambient = vec3(texture(material.diffuse, tex_coords))
@@ -124,25 +126,25 @@ SpotLight light, vec3 normal, vec3 view_dir, vec3 frag_pos
 	// Dot product on two vectors results in vector lengths multiplied by cosine
 	// of the angle between vectors - if we use normalized vectors, we're left
 	// with just the cosine.
-	float theta = dot(light_dir, normalize(-light.direction));
+	float theta_cos = dot(light_dir, normalize(-light.direction));
 
 	// For values between 0 and 90 degrees, the cosine is descending from 1
 	// towards 0, so bigger theta actually equals a smaller angle
-	if (theta > light.cut_off_cos)
+	if (theta_cos > light.cut_off_cos)
 	{
 		// Diffuse
 		float diff = max(dot(normal, light_dir), 0.0);
 		vec3 diffuse = vec3(texture(material.diffuse, tex_coords))
-		* diff
-		* light.diffuse
-		* attenuation;
+			* diff
+			* light.diffuse
+			* attenuation;
 
 		// Specular
 		float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
 		vec3 specular = vec3(texture(material.specular, tex_coords))
-		* spec
-		* light.specular
-		* attenuation;
+			* spec
+			* light.specular
+			* attenuation;
 
 		return ambient + diffuse + specular;
 	}
