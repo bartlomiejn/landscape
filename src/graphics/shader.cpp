@@ -105,6 +105,44 @@ Shader::set_uniform(const char *name, glm::vec3 vec)
 	glUniform3f(model_loc, vec.x, vec.y, vec.z);
 }
 
+void 
+Shader::set_dir_light(DirectionalLight& light)
+{
+	set_uniform("dir_light.direction", light.direction);
+	set_uniform("dir_light.ambient", light.ambient);
+	set_uniform("dir_light.diffuse", light.diffuse);
+	set_uniform("dir_light.specular", light.specular);	
+}
+
+void 
+Shader::set_pt_light(PointLight& light)
+{
+	set_uniform("pt_lights[0].position", light.position);
+	set_uniform("pt_lights[0].ambient", light.ambient);
+	set_uniform("pt_lights[0].diffuse", light.diffuse);
+	set_uniform("pt_lights[0].specular", light.specular);
+	set_uniform("pt_lights[0].constant", light.att_constant);
+	set_uniform("pt_lights[0].linear", light.att_linear);
+	set_uniform("pt_lights[0].quadratic", light.att_quadratic);
+	set_uniform("pt_light_count", 1);
+}
+
+void Shader::set_spot_light(SpotLight& light)
+{
+	set_uniform("spot_lights[0].position", light.position);
+	set_uniform("spot_lights[0].direction", light.direction);
+	set_uniform("spot_lights[0].ambient", light.ambient);
+	set_uniform("spot_lights[0].diffuse", light.diffuse);
+	set_uniform("spot_lights[0].specular", light.specular);
+	set_uniform("spot_lights[0].cut_off_cos", light.cut_off_cos);
+	set_uniform(
+		"spot_lights[0].outer_cut_off_cos", light.outer_cut_off_cos);
+	set_uniform("spot_lights[0].constant", light.att_constant);
+	set_uniform("spot_lights[0].linear", light.att_linear);
+	set_uniform("spot_lights[0].quadratic", light.att_quadratic);
+	set_uniform("spot_light_count", 1);
+}
+
 unsigned int
 Shader::get_uniform_location(const char *uniform)
 {

@@ -9,8 +9,11 @@
 #include <graphics/texture.h>
 #include <graphics/light.h>
 
-#define WIN_RES_X 800
-#define WIN_RES_Y 600
+const unsigned int window_width = 800;
+const unsigned int window_height = 600;
+
+const unsigned int shadow_map_width = 1024;
+const unsigned int shadow_map_height = 1024;
 
 float cube_verts[] = {
 	// positions          // normals           // texture coords
@@ -84,8 +87,8 @@ float tex_coords[] = {
 float delta_time = 0.0f; /// Time between current frame and last frame
 float last_frame = 0.0f; /// Time of last frame
 
-float mouse_last_x = WIN_RES_X / 2;
-float mouse_last_y = WIN_RES_Y / 2;
+float mouse_last_x = window_width / 2;
+float mouse_last_y = window_height / 2;
 float mouse_sensitivity = 0.05f;
 
 float movement_speed = 2.5f;
@@ -97,6 +100,27 @@ Camera camera(
 	0.0f, // Pitch
 	45.0f); // FOV
 
+DirectionalLight dir_light(
+	glm::vec3(-0.2f, -1.0f, -0.3f), // Direction
+	glm::vec3(0.05f, 0.05f, 0.05f), // Ambient
+	glm::vec3(0.3f, 0.3f, 0.3f), 	// Diffuse
+	glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
+
+PointLight pt_light(
+	glm::vec3(1.2f, 1.0f, 2.0f), 	// Position
+	glm::vec3(0.05f, 0.05f, 0.05f), // Ambient
+	glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
+	glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
+
+SpotLight spot_light(
+	camera.position(),		// Position
+	camera.front(),			// Direction
+	glm::vec3(0.0f, 0.0f, 0.0f), 	// Ambient
+	glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
+	glm::vec3(1.0f, 1.0f, 1.0f),	// Specular
+	glm::cos(glm::radians(12.5f)),	// Inner cut off
+	glm::cos(glm::radians(17.5f))); // Outer cut off
+	
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
 {
@@ -161,7 +185,7 @@ main(void)
 	
 	// Setup GLFW window
 	GLFWwindow* window = glfwCreateWindow(
-		WIN_RES_X, WIN_RES_Y, "Landscape", NULL, NULL);
+		window_width, window_height, "Landscape", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window." << std::endl;
@@ -182,7 +206,9 @@ main(void)
 	}
 	
 	// Resize OpenGL viewport to initial window resolution
-	on_fb_resize(nullptr, WIN_RES_X, WIN_RES_Y);
+	on_fb_resize(nullptr, window_width, window_height);
+	
+	glEnable(GL_DEPTH_TEST);
 	
 	// Compile and link triangle shader
 	Shader material_shader("glsl/vertex.glsl", "glsl/material.glsl");
@@ -222,6 +248,33 @@ main(void)
 	// Generate textures
 	Texture container_diffuse(diff_img, layout_rgba);
 	Texture container_specular(spec_img, layout_rgba);
+	
+	// Framebuffer object for rendering a depth map
+	unsigned int depth_map_fbo;
+	glGenFramebuffers(1, &depth_map_fbo);
+	
+	// Depth map
+	unsigned int depth_map;
+	glGenTextures(1, &depth_map);
+	glBindTexture(GL_TEXTURE_2D, depth_map);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadow_map_width,
+		shadow_map_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	
+	// Bind the depth map to its FBO, disable draw/read for color data
+	glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+	glFramebufferTexture2D(
+		GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map,
+		0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	
+	// Bind the GLFW window FBO back
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	// Generate vertex array object which stores vertex attribute configs
 	// and associated VBOs
@@ -268,29 +321,6 @@ main(void)
 		0, 3, GL_FLOAT, GL_FALSE, vert_stride, (void*)0);
 	glEnableVertexAttribArray(0);
 	
-	glEnable(GL_DEPTH_TEST);
-	
-	DirectionalLight dir_light(
-		glm::vec3(-0.2f, -1.0f, -0.3f), // Direction
-		glm::vec3(0.05f, 0.05f, 0.05f), // Ambient
-		glm::vec3(0.3f, 0.3f, 0.3f), 	// Diffuse
-		glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
-	
-	PointLight pt_light(
-		glm::vec3(1.2f, 1.0f, 2.0f), 	// Position
-		glm::vec3(0.05f, 0.05f, 0.05f), // Ambient
-		glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
-		glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
-	
-	SpotLight spot_light(
-		camera.position(),		// Position
-		camera.front(),			// Direction
-		glm::vec3(0.0f, 0.0f, 0.0f), 	// Ambient
-		glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
-		glm::vec3(1.0f, 1.0f, 1.0f),	// Specular
-		glm::cos(glm::radians(12.5f)),	// Inner cut off
-		glm::cos(glm::radians(17.5f))); // Outer cut off
-	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -306,12 +336,16 @@ main(void)
 		// Generate perspective projection
 		glm::mat4 projection = glm::perspective(
 			glm::radians(camera.fov()),
-			(float)WIN_RES_X / (float)WIN_RES_Y,
+			(float)window_width / (float)window_height,
 			0.1f,
 			100.0f);
 		
+		// Update spot light
 		spot_light.position = camera.position();
 		spot_light.direction = camera.front();
+		
+		// Configure viewport to window settings
+		glViewport(0, 0, window_width, window_height);
 		
 		// Clear the drawing buffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -325,58 +359,12 @@ main(void)
 		material_shader.set_uniform("view_pos", camera.position());
 		material_shader.set_uniform("projection", projection);
 		
-		// Directional light
-		material_shader.set_uniform(
-			"dir_light.direction", dir_light.direction);
-		material_shader.set_uniform(
-			"dir_light.ambient", dir_light.ambient);
-		material_shader.set_uniform(
-			"dir_light.diffuse", dir_light.diffuse);
-		material_shader.set_uniform(
-			"dir_light.specular", dir_light.specular);
+		// Setup lights
+		material_shader.set_dir_light(dir_light);
+		material_shader.set_pt_light(pt_light);
+		material_shader.set_spot_light(spot_light);
 		
-		// Point light
-		material_shader.set_uniform(
-			"pt_lights[0].position", pt_light.position);
-		material_shader.set_uniform(
-			"pt_lights[0].ambient", pt_light.ambient);
-		material_shader.set_uniform(
-			"pt_lights[0].diffuse", pt_light.diffuse);
-		material_shader.set_uniform(
-			"pt_lights[0].specular", pt_light.specular);
-		material_shader.set_uniform(
-			"pt_lights[0].constant", pt_light.att_constant);
-		material_shader.set_uniform(
-			"pt_lights[0].linear", pt_light.att_linear);
-		material_shader.set_uniform(
-			"pt_lights[0].quadratic", pt_light.att_quadratic);
-		material_shader.set_uniform("pt_light_count", 1);
-		
-		// Spot light
-		material_shader.set_uniform(
-			"spot_lights[0].position", spot_light.position);
-		material_shader.set_uniform(
-			"spot_lights[0].direction", spot_light.direction);
-		material_shader.set_uniform(
-			"spot_lights[0].ambient", spot_light.ambient);
-		material_shader.set_uniform(
-			"spot_lights[0].diffuse", spot_light.diffuse);
-		material_shader.set_uniform(
-			"spot_lights[0].specular", spot_light.specular);
-		material_shader.set_uniform(
-			"spot_lights[0].cut_off_cos", spot_light.cut_off_cos);
-		material_shader.set_uniform(
-			"spot_lights[0].outer_cut_off_cos",
-			spot_light.outer_cut_off_cos);
-		material_shader.set_uniform(
-			"spot_lights[0].constant", spot_light.att_constant);
-		material_shader.set_uniform(
-			"spot_lights[0].linear", spot_light.att_linear);
-		material_shader.set_uniform(
-			"spot_lights[0].quadratic", spot_light.att_quadratic);
-		material_shader.set_uniform("spot_light_count", 1);
-		
-		// Material
+		// Setup material
 		material_shader.set_uniform(
 			"material.diffuse", 0);
 		material_shader.set_uniform(
@@ -416,6 +404,7 @@ main(void)
 		glfwPollEvents();
 	}
 	
+	glGenFramebuffers(1, &depth_map_fbo);
 	glDeleteVertexArrays(1, &vao);
 	glDeleteVertexArrays(1, &light_vao);
 	glDeleteBuffers(1, &vbo);
