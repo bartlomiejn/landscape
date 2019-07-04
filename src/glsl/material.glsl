@@ -1,5 +1,8 @@
 #version 330 core
 
+#define MAX_POINT_LIGHTS 	8
+#define MAX_SPOT_LIGHTS 	8
+
 struct Material
 {
 	sampler2D diffuse;
@@ -46,9 +49,11 @@ in vec3 normal;
 
 uniform vec3 view_pos;
 uniform Material material;
-uniform PointLight pt_light;
 uniform DirLight dir_light;
-uniform SpotLight spot_light;
+uniform PointLight pt_lights[MAX_POINT_LIGHTS];
+uniform SpotLight spot_lights[MAX_POINT_LIGHTS];
+uniform int pt_light_count;
+uniform int spot_light_count;
 
 out vec4 FragColor;
 
@@ -158,8 +163,11 @@ void main()
 	vec3 view_dir = normalize(view_pos - frag_pos);
 	vec3 output_color = vec3(0.0);
 	output_color += dir_light_contribution(dir_light, norm, view_dir);
-	output_color += pt_light_contribution(pt_light, norm, view_dir, frag_pos);
-	output_color +=
-		spot_light_contribution(spot_light, norm, view_dir, frag_pos);
+	for (int i = 0; i < pt_light_count; i++)
+		output_color +=
+			pt_light_contribution(pt_lights[i], norm, view_dir, frag_pos);
+	for (int i = 0; i < spot_light_count; i++)
+		output_color +=
+			spot_light_contribution(spot_lights[i], norm, view_dir, frag_pos);
 	FragColor = vec4(output_color, 1.0);
 }

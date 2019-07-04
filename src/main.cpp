@@ -325,22 +325,6 @@ main(void)
 		material_shader.set_uniform("view_pos", camera.position());
 		material_shader.set_uniform("projection", projection);
 		
-		// Point light
-		material_shader.set_uniform(
-			"pt_light.position", pt_light.position);
-		material_shader.set_uniform(
-			"pt_light.ambient", pt_light.ambient);
-		material_shader.set_uniform(
-			"pt_light.diffuse", pt_light.diffuse);
-		material_shader.set_uniform(
-			"pt_light.specular", pt_light.specular);
-		material_shader.set_uniform(
-			"pt_light.constant", pt_light.att_constant);
-		material_shader.set_uniform(
-			"pt_light.linear", pt_light.att_linear);
-		material_shader.set_uniform(
-			"pt_light.quadratic", pt_light.att_quadratic);
-		
 		// Directional light
 		material_shader.set_uniform(
 			"dir_light.direction", dir_light.direction);
@@ -351,28 +335,46 @@ main(void)
 		material_shader.set_uniform(
 			"dir_light.specular", dir_light.specular);
 		
+		// Point light
+		material_shader.set_uniform(
+			"pt_lights[0].position", pt_light.position);
+		material_shader.set_uniform(
+			"pt_lights[0].ambient", pt_light.ambient);
+		material_shader.set_uniform(
+			"pt_lights[0].diffuse", pt_light.diffuse);
+		material_shader.set_uniform(
+			"pt_lights[0].specular", pt_light.specular);
+		material_shader.set_uniform(
+			"pt_lights[0].constant", pt_light.att_constant);
+		material_shader.set_uniform(
+			"pt_lights[0].linear", pt_light.att_linear);
+		material_shader.set_uniform(
+			"pt_lights[0].quadratic", pt_light.att_quadratic);
+		material_shader.set_uniform("pt_light_count", 1);
+		
 		// Spot light
 		material_shader.set_uniform(
-			"spot_light.position", spot_light.position);
+			"spot_lights[0].position", spot_light.position);
 		material_shader.set_uniform(
-			"spot_light.direction", spot_light.direction);
+			"spot_lights[0].direction", spot_light.direction);
 		material_shader.set_uniform(
-			"spot_light.ambient", spot_light.ambient);
+			"spot_lights[0].ambient", spot_light.ambient);
 		material_shader.set_uniform(
-			"spot_light.diffuse", spot_light.diffuse);
+			"spot_lights[0].diffuse", spot_light.diffuse);
 		material_shader.set_uniform(
-			"spot_light.specular", spot_light.specular);
+			"spot_lights[0].specular", spot_light.specular);
 		material_shader.set_uniform(
-			"spot_light.cut_off_cos", spot_light.cut_off_cos);
+			"spot_lights[0].cut_off_cos", spot_light.cut_off_cos);
 		material_shader.set_uniform(
-			"spot_light.outer_cut_off_cos",
+			"spot_lights[0].outer_cut_off_cos",
 			spot_light.outer_cut_off_cos);
 		material_shader.set_uniform(
-			"spot_light.constant", spot_light.att_constant);
+			"spot_lights[0].constant", spot_light.att_constant);
 		material_shader.set_uniform(
-			"spot_light.linear", spot_light.att_linear);
+			"spot_lights[0].linear", spot_light.att_linear);
 		material_shader.set_uniform(
-			"spot_light.quadratic", spot_light.att_quadratic);
+			"spot_lights[0].quadratic", spot_light.att_quadratic);
+		material_shader.set_uniform("spot_light_count", 1);
 		
 		// Material
 		material_shader.set_uniform(
