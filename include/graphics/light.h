@@ -26,8 +26,8 @@ class PointLight
 public:
 	PointLight(
 		glm::vec3 pos, glm::vec3 amb, glm::vec3 diff, glm::vec3 spec,
-		float att_const = 1.0, float att_lin = 0.35,
-		float att_quad = 0.44
+		float att_const = 1.0, float att_lin = 0.09,
+		float att_quad = 0.032
 	):
 		position(pos),
 		ambient(amb),

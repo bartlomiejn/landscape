@@ -272,13 +272,13 @@ main(void)
 	
 	DirectionalLight dir_light(
 		glm::vec3(-0.2f, -1.0f, -0.3f), // Direction
-		glm::vec3(0.2f, 0.2f, 0.2f), 	// Ambient
-		glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
+		glm::vec3(0.1f, 0.1f, 0.1f), 	// Ambient
+		glm::vec3(0.3f, 0.3f, 0.3f), 	// Diffuse
 		glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
 	
 	PointLight pt_light(
 		glm::vec3(1.2f, 1.0f, 2.0f), 	// Position
-		glm::vec3(0.2f, 0.2f, 0.2f), 	// Ambient
+		glm::vec3(0.1f, 0.1f, 0.1f), 	// Ambient
 		glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
 		glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
 	
@@ -322,6 +322,12 @@ main(void)
 			"pt_light.diffuse", pt_light.diffuse);
 		material_shader.set_uniform(
 			"pt_light.specular", pt_light.specular);
+		material_shader.set_uniform(
+			"pt_light.constant", pt_light.att_constant);
+		material_shader.set_uniform(
+			"pt_light.linear", pt_light.att_linear);
+		material_shader.set_uniform(
+			"pt_light.quadratic", pt_light.att_quadratic);
 		
 		// Directional light
 		material_shader.set_uniform(

@@ -21,6 +21,9 @@ struct PointLight
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
+	float constant;
+	float linear;
+	float quadratic;
 };
 
 in vec2 tex_coords;
@@ -62,20 +65,28 @@ vec3 pt_light_contribution(
 ){
 	vec3 light_dir = normalize(light.position - frag_pos);
 	vec3 reflect_dir = reflect(-light_dir, normal);
+	float distance = length(light.position - frag_pos);
+	float attenuation = 1.0 / (light.constant + light.linear * distance
+		+ light.quadratic * (distance * distance));
 
 	// Ambient
-	vec3 ambient = light.ambient * vec3(texture(material.diffuse, tex_coords));
+	vec3 ambient = vec3(texture(material.diffuse, tex_coords))
+		* light.ambient
+		* attenuation;
 
 	// Diffuse
 	float diff = max(dot(normal, light_dir), 0.0);
 	vec3 diffuse = vec3(texture(material.diffuse, tex_coords))
 		* diff
-		* light.diffuse;
+		* light.diffuse
+		* attenuation;
 
 	// Specular
 	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
-	vec3 specular =
-		vec3(texture(material.specular, tex_coords)) * spec * light.specular;
+	vec3 specular = vec3(texture(material.specular, tex_coords))
+		* spec
+		* light.specular
+		* attenuation;
 
 	return (ambient + diffuse + specular);
 }
