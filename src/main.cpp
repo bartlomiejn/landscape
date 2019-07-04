@@ -120,7 +120,19 @@ SpotLight spot_light(
 	glm::vec3(1.0f, 1.0f, 1.0f),	// Specular
 	glm::cos(glm::radians(12.5f)),	// Inner cut off
 	glm::cos(glm::radians(17.5f))); // Outer cut off
-	
+
+Shader material_shader("glsl/vertex.glsl", "glsl/material.glsl");
+Shader light_shader("glsl/vertex.glsl", "glsl/light.glsl");
+
+Image diff_img("assets/container2_diff.png");
+Image spec_img("assets/container2_spec.png");
+
+Texture container_diffuse(diff_img, layout_rgba);
+Texture container_specular(spec_img, layout_rgba);
+
+unsigned int vao; /// Cube vao
+unsigned int light_vao; /// Light cube vao
+
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
 {
@@ -171,6 +183,76 @@ handle_keyboard_input(GLFWwindow *window)
 		camera.move(direction_right, per_frame_speed);
 }
 
+void
+draw_objects_pass()
+{
+	// Configure viewport to window settings
+	glViewport(0, 0, window_width, window_height);
+	
+	// Clear the drawing buffer
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	
+	// Generate view matrix
+	glm::mat4 view = camera.view_matrix();
+	
+	// Generate perspective projection
+	glm::mat4 projection = glm::perspective(
+		glm::radians(camera.fov()),
+		(float)window_width / (float)window_height,
+		0.1f,
+		100.0f);
+	
+	// Update spot light
+	spot_light.position = camera.position();
+	spot_light.direction = camera.front();
+	
+	// Use the shader and configure its uniforms
+	material_shader.use();
+	material_shader.set_uniform("view", view);
+	material_shader.set_uniform("view_pos", camera.position());
+	material_shader.set_uniform("projection", projection);
+	material_shader.set_dir_light(dir_light);
+	material_shader.set_pt_light(pt_light);
+	material_shader.set_spot_light(spot_light);
+	material_shader.set_uniform(
+		"material.diffuse", 0);
+	material_shader.set_uniform(
+		"material.specular", 1);
+	material_shader.set_uniform("material.shininess", 32.0f);
+	
+	// Draw the cubes
+	glBindVertexArray(vao);
+	container_diffuse.use(GL_TEXTURE0);
+	container_specular.use(GL_TEXTURE1);
+	for (unsigned int i = 0; i < 10; i++)
+	{
+		glm::mat4 model(1.0f);
+		model = glm::translate(model, cube_positions[i]);
+		float angle = 20.0f * i;
+		float rotation =
+			(float)glfwGetTime() * glm::radians(50.0f)
+			+ glm::radians(angle);
+		model = glm::rotate(
+			model, rotation, glm::vec3(0.5f, 1.0f, 0.0f));
+		material_shader.set_uniform("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+	
+	// Draw the lamp cube
+	glm::mat4 model(1.0f);
+	model = glm::translate(model, pt_light.position);
+	model = glm::scale(model, glm::vec3(0.2f));
+	light_shader.use();
+	light_shader.set_uniform("model", model);
+	light_shader.set_uniform("view", view);
+	light_shader.set_uniform("projection", projection);
+	glBindVertexArray(light_vao);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
 int
 main(void)
 {
@@ -211,8 +293,6 @@ main(void)
 	glEnable(GL_DEPTH_TEST);
 	
 	// Compile and link triangle shader
-	Shader material_shader("glsl/vertex.glsl", "glsl/material.glsl");
-	Shader light_shader("glsl/vertex.glsl", "glsl/light.glsl");
 	try
 	{
 		material_shader.try_create_and_link();
@@ -229,9 +309,7 @@ main(void)
 		return -1;
 	}
 	
-	// Load diffuse map
-	Image diff_img("assets/container2_diff.png");
-	Image spec_img("assets/container2_spec.png");
+	// Load texture maps
 	try
 	{
 		diff_img.try_load();
@@ -245,9 +323,9 @@ main(void)
 		return -1;
 	}
 	
-	// Generate textures
-	Texture container_diffuse(diff_img, layout_rgba);
-	Texture container_specular(spec_img, layout_rgba);
+	// Load textures
+	container_diffuse.load();
+	container_specular.load();
 	
 	// Framebuffer object for rendering a depth map
 	unsigned int depth_map_fbo;
@@ -276,9 +354,6 @@ main(void)
 	// Bind the GLFW window FBO back
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
-	// Generate vertex array object which stores vertex attribute configs
-	// and associated VBOs
-	unsigned int vao;
 	// Generate vertex buffer object, copy vertices data, set to vertex
 	// attribute pointer at 0 and enable
 	unsigned int vbo;
@@ -288,6 +363,8 @@ main(void)
 	// Stride value for `vertices`
 	size_t vert_stride = 8 * sizeof(float);
 	
+	// Generate vertex array object which stores vertex attribute configs
+	// and associated VBOs
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 	glBindVertexArray(vao);
@@ -310,8 +387,7 @@ main(void)
 		2, 2, GL_FLOAT, GL_FALSE, vert_stride,
 		(void *)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
-	
-	uint light_vao;
+
 	glGenVertexArrays(1, &light_vao);
 	glBindVertexArray(light_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -330,75 +406,7 @@ main(void)
 		
 		handle_keyboard_input(window);
 		
-		// Generate view matrix
-		glm::mat4 view = camera.view_matrix();
-		
-		// Generate perspective projection
-		glm::mat4 projection = glm::perspective(
-			glm::radians(camera.fov()),
-			(float)window_width / (float)window_height,
-			0.1f,
-			100.0f);
-		
-		// Update spot light
-		spot_light.position = camera.position();
-		spot_light.direction = camera.front();
-		
-		// Configure viewport to window settings
-		glViewport(0, 0, window_width, window_height);
-		
-		// Clear the drawing buffer
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_DEPTH_BUFFER_BIT);
-		
-		// Use the shader and configure transformation uniforms
-		material_shader.use();
-		material_shader.set_uniform("view", view);
-		material_shader.set_uniform("view_pos", camera.position());
-		material_shader.set_uniform("projection", projection);
-		
-		// Setup lights
-		material_shader.set_dir_light(dir_light);
-		material_shader.set_pt_light(pt_light);
-		material_shader.set_spot_light(spot_light);
-		
-		// Setup material
-		material_shader.set_uniform(
-			"material.diffuse", 0);
-		material_shader.set_uniform(
-			"material.specular", 1);
-		material_shader.set_uniform("material.shininess", 32.0f);
-		
-		// Draw the cubes
-		glBindVertexArray(vao);
-		container_diffuse.use(GL_TEXTURE0);
-		container_specular.use(GL_TEXTURE1);
-		for (unsigned int i = 0; i < 10; i++)
-		{
-			glm::mat4 model(1.0f);
-			model = glm::translate(model, cube_positions[i]);
-			float angle = 20.0f * i;
-			float rotation =
-				(float)glfwGetTime() * glm::radians(50.0f)
-				+ glm::radians(angle);
-			model = glm::rotate(
-				model, rotation, glm::vec3(0.5f, 1.0f, 0.0f));
-			material_shader.set_uniform("model", model);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
-		
-		// Draw the lamp cube
-		glm::mat4 model(1.0f);
-		model = glm::translate(model, pt_light.position);
-		model = glm::scale(model, glm::vec3(0.2f));
-		light_shader.use();
-		light_shader.set_uniform("model", model);
-		light_shader.set_uniform("view", view);
-		light_shader.set_uniform("projection", projection);
-		glBindVertexArray(light_vao);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		draw_objects_pass();
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();

@@ -1,6 +1,12 @@
 #include <graphics/texture.h>
 
-Texture::Texture(Image image, ColorLayout layout)
+Texture::Texture(Image& tex_image, ColorLayout tex_layout):
+	image(tex_image),
+	layout(tex_layout)
+{}
+
+void
+Texture::load()
 {
 	GLenum format;
 	switch (layout)
@@ -9,6 +15,7 @@ Texture::Texture(Image image, ColorLayout layout)
 			format = GL_RGB;
 			break;
 		case layout_rgba:
+		default:
 			format = GL_RGBA;
 			break;
 	}

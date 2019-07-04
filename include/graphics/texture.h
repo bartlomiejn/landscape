@@ -18,7 +18,10 @@ public:
 	/// \param image Image to create a texture from. Should be loaded before
 	/// use.
 	/// \param layout Color layout to use.
-	Texture(Image image, ColorLayout layout);
+	Texture(Image& image, ColorLayout layout);
+	
+	/// Loads the texture.
+	void load();
 	
 	/// Uses the texture.
 	///
@@ -26,6 +29,8 @@ public:
 	void use(GLenum tex_unit);
 private:
 	unsigned int id;
+	Image& image;
+	ColorLayout layout;
 };
 
 #endif //LANDSCAPE_TEXTURE_H
