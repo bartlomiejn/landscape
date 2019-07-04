@@ -105,8 +105,14 @@ Shader::set_uniform(const char *name, glm::vec3 vec)
 	glUniform3f(model_loc, vec.x, vec.y, vec.z);
 }
 
+MaterialShader::MaterialShader(
+	const char* vert_filename, const char* frag_filename
+):
+	Shader(vert_filename, frag_filename)
+{};
+
 void 
-Shader::set_dir_light(DirectionalLight& light)
+MaterialShader::set_dir_light(DirectionalLight& light)
 {
 	set_uniform("dir_light.direction", light.direction);
 	set_uniform("dir_light.ambient", light.ambient);
@@ -114,8 +120,8 @@ Shader::set_dir_light(DirectionalLight& light)
 	set_uniform("dir_light.specular", light.specular);	
 }
 
-void 
-Shader::set_pt_light(PointLight& light)
+void
+MaterialShader::set_pt_light(PointLight& light)
 {
 	set_uniform("pt_lights[0].position", light.position);
 	set_uniform("pt_lights[0].ambient", light.ambient);
@@ -127,7 +133,7 @@ Shader::set_pt_light(PointLight& light)
 	set_uniform("pt_light_count", 1);
 }
 
-void Shader::set_spot_light(SpotLight& light)
+void MaterialShader::set_spot_light(SpotLight& light)
 {
 	set_uniform("spot_lights[0].position", light.position);
 	set_uniform("spot_lights[0].direction", light.direction);

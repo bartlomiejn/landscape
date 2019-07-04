@@ -14,15 +14,22 @@ public:
 	void set_uniform(const char *name, float value);
 	void set_uniform(const char *name, glm::mat4 matrix);
 	void set_uniform(const char *name, glm::vec3 vec);
-	void set_dir_light(DirectionalLight& light);
-	void set_pt_light(PointLight& light);
-	void set_spot_light(SpotLight& light);
 	unsigned int get_uniform_location(const char *uniform);
 private:
 	unsigned int id;
 	const char *vert_filename;
 	const char *frag_filename;
 };
+
+class MaterialShader: public Shader
+{
+public:
+	MaterialShader(const char* vert_filename, const char* frag_filename);
+	void set_dir_light(DirectionalLight& light);
+	void set_pt_light(PointLight& light);
+	void set_spot_light(SpotLight& light);
+};
+
 
 class ShaderCompileFailure {};
 class ShaderLinkFailure {};

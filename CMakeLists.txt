@@ -70,6 +70,14 @@ configure_file(
         ${PROJECT_SOURCE_DIR}/src/glsl/light.glsl
         ${CMAKE_BINARY_DIR}/output/glsl/light.glsl
         COPYONLY)
+configure_file(
+        ${PROJECT_SOURCE_DIR}/src/glsl/shadowmap_vertex.glsl
+        ${CMAKE_BINARY_DIR}/output/glsl/shadowmap_vertex.glsl
+        COPYONLY)
+configure_file(
+        ${PROJECT_SOURCE_DIR}/src/glsl/shadowmap_frag.glsl
+        ${CMAKE_BINARY_DIR}/output/glsl/shadowmap_frag.glsl
+        COPYONLY)
 
 # Image assets
 configure_file(

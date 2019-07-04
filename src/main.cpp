@@ -73,17 +73,6 @@ glm::vec3 cube_positions[] = {
 	glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 
-unsigned int indices[] = {
-	0, 1, 3, // First triangle
-	1, 2, 3, // Second triangle
-};
-
-float tex_coords[] = {
-	0.0f, 0.0f,  // Lower-left corner
-	1.0f, 0.0f,  // Lower-right corner
-	0.5f, 1.0f   // Top-center
-};
-
 float delta_time = 0.0f; /// Time between current frame and last frame
 float last_frame = 0.0f; /// Time of last frame
 
@@ -121,8 +110,10 @@ SpotLight spot_light(
 	glm::cos(glm::radians(12.5f)),	// Inner cut off
 	glm::cos(glm::radians(17.5f))); // Outer cut off
 
-Shader material_shader("glsl/vertex.glsl", "glsl/material.glsl");
+MaterialShader material_shader("glsl/vertex.glsl", "glsl/material.glsl");
 Shader light_shader("glsl/vertex.glsl", "glsl/light.glsl");
+Shader shadow_map_shader(
+	"glsl/shadowmap_vertex.glsl", "glsl/shadowmap_frag.glsl");
 
 Image diff_img("assets/container2_diff.png");
 Image spec_img("assets/container2_spec.png");
@@ -130,8 +121,8 @@ Image spec_img("assets/container2_spec.png");
 Texture container_diffuse(diff_img, layout_rgba);
 Texture container_specular(spec_img, layout_rgba);
 
-unsigned int vao; /// Cube vao
-unsigned int light_vao; /// Light cube vao
+unsigned int vao; 		/// Cube vao
+unsigned int depth_map_fbo; 	/// Shadow map fbo
 
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
@@ -184,10 +175,50 @@ handle_keyboard_input(GLFWwindow *window)
 }
 
 void
+shadow_map_pass()
+{
+	float near_plane = 1.0f;
+	float far_plane = 7.5f;
+	glm::mat4 light_projection =
+		glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+	glm::mat4 light_view = glm::lookAt(
+		glm::vec3(-2.0f, 4.0f, -1.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 light_space_matrix = light_projection * light_view;
+	
+	shadow_map_shader.use();
+	shadow_map_shader.set_uniform("light_space_matrix", light_space_matrix);
+	glViewport(0, 0, shadow_map_width, shadow_map_height);
+	glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+	glClear(GL_DEPTH_BUFFER_BIT);
+}
+
+void
+draw_cubes(Shader &shader)
+{
+	glBindVertexArray(vao);
+	for (unsigned int i = 0; i < 10; i++)
+	{
+		glm::mat4 model(1.0f);
+		model = glm::translate(model, cube_positions[i]);
+		float angle = 20.0f * i;
+		float rotation =
+			(float)glfwGetTime() * glm::radians(50.0f)
+			+ glm::radians(angle);
+		model = glm::rotate(
+			model, rotation, glm::vec3(0.5f, 1.0f, 0.0f));
+		shader.set_uniform("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+}
+
+void
 draw_objects_pass()
 {
 	// Configure viewport to window settings
 	glViewport(0, 0, window_width, window_height);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	// Clear the drawing buffer
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -223,34 +254,11 @@ draw_objects_pass()
 		"material.specular", 1);
 	material_shader.set_uniform("material.shininess", 32.0f);
 	
-	// Draw the cubes
-	glBindVertexArray(vao);
+	// Bind textures
 	container_diffuse.use(GL_TEXTURE0);
 	container_specular.use(GL_TEXTURE1);
-	for (unsigned int i = 0; i < 10; i++)
-	{
-		glm::mat4 model(1.0f);
-		model = glm::translate(model, cube_positions[i]);
-		float angle = 20.0f * i;
-		float rotation =
-			(float)glfwGetTime() * glm::radians(50.0f)
-			+ glm::radians(angle);
-		model = glm::rotate(
-			model, rotation, glm::vec3(0.5f, 1.0f, 0.0f));
-		material_shader.set_uniform("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-	}
 	
-	// Draw the lamp cube
-	glm::mat4 model(1.0f);
-	model = glm::translate(model, pt_light.position);
-	model = glm::scale(model, glm::vec3(0.2f));
-	light_shader.use();
-	light_shader.set_uniform("model", model);
-	light_shader.set_uniform("view", view);
-	light_shader.set_uniform("projection", projection);
-	glBindVertexArray(light_vao);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
+	draw_cubes(material_shader);
 }
 
 int
@@ -297,6 +305,11 @@ main(void)
 	{
 		material_shader.try_create_and_link();
 		light_shader.try_create_and_link();
+		shadow_map_shader.try_create_and_link();
+		diff_img.try_load();
+		spec_img.try_load();
+		container_diffuse.load();
+		container_specular.load();
 	}
 	catch (ShaderCompileFailure err)
 	{
@@ -308,27 +321,15 @@ main(void)
 		glfwTerminate();
 		return -1;
 	}
-	
-	// Load texture maps
-	try
-	{
-		diff_img.try_load();
-		spec_img.try_load();
-	}
 	catch (ImageLoadFailure err)
 	{
 		std::cout << "Image loading failure: " << err.filename
-			<< std::endl;
+			  << std::endl;
 		glfwTerminate();
 		return -1;
 	}
 	
-	// Load textures
-	container_diffuse.load();
-	container_specular.load();
-	
 	// Framebuffer object for rendering a depth map
-	unsigned int depth_map_fbo;
 	glGenFramebuffers(1, &depth_map_fbo);
 	
 	// Depth map
@@ -357,8 +358,6 @@ main(void)
 	// Generate vertex buffer object, copy vertices data, set to vertex
 	// attribute pointer at 0 and enable
 	unsigned int vbo;
-	// Generate element buffer object that stores vertex indices
-	unsigned int ebo;
 	
 	// Stride value for `vertices`
 	size_t vert_stride = 8 * sizeof(float);
@@ -366,9 +365,9 @@ main(void)
 	// Generate vertex array object which stores vertex attribute configs
 	// and associated VBOs
 	glGenVertexArrays(1, &vao);
-	glGenBuffers(1, &vbo);
 	glBindVertexArray(vao);
-
+	
+	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(
 		GL_ARRAY_BUFFER, sizeof(cube_verts), cube_verts, GL_STATIC_DRAW);
@@ -387,15 +386,6 @@ main(void)
 		2, 2, GL_FLOAT, GL_FALSE, vert_stride,
 		(void *)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
-
-	glGenVertexArrays(1, &light_vao);
-	glBindVertexArray(light_vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	
-	// Only use the vertex position attribute
-	glVertexAttribPointer(
-		0, 3, GL_FLOAT, GL_FALSE, vert_stride, (void*)0);
-	glEnableVertexAttribArray(0);
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
@@ -406,6 +396,7 @@ main(void)
 		
 		handle_keyboard_input(window);
 		
+		shadow_map_pass();
 		draw_objects_pass();
 		
 		glfwSwapBuffers(window);
@@ -414,9 +405,7 @@ main(void)
 	
 	glGenFramebuffers(1, &depth_map_fbo);
 	glDeleteVertexArrays(1, &vao);
-	glDeleteVertexArrays(1, &light_vao);
 	glDeleteBuffers(1, &vbo);
-	glDeleteBuffers(1, &ebo);
 	glfwTerminate();
 	
 	return 0;
