@@ -48,6 +48,38 @@ public:
 	float att_quadratic;
 };
 
+class SpotLight
+{
+public:
+	SpotLight(
+		glm::vec3 pos, glm::vec3 dir, glm::vec3 amb, glm::vec3 diff,
+		glm::vec3 spec, float cutoff_cosine, float att_const = 1.0,
+		float att_lin = 0.027, float att_quad = 0.0028
+	):
+		position(pos),
+		direction(dir),
+		ambient(amb),
+		diffuse(diff),
+		specular(spec),
+		cut_off_cosine(cutoff_cosine),
+		att_constant(att_const),
+		att_linear(att_lin),
+		att_quadratic(att_quad)
+	{};
+	
+	glm::vec3 position;
+	glm::vec3 direction;
+	glm::vec3 ambient;
+	glm::vec3 diffuse;
+	glm::vec3 specular;
+	
+	float cut_off_cosine;
+	
+	float att_constant;
+	float att_linear;
+	float att_quadratic;
+};
+
 // Attenuation table
 //
 // Dist	Const	Linear	Quadratic

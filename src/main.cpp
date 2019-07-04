@@ -272,15 +272,23 @@ main(void)
 	
 	DirectionalLight dir_light(
 		glm::vec3(-0.2f, -1.0f, -0.3f), // Direction
-		glm::vec3(0.1f, 0.1f, 0.1f), 	// Ambient
+		glm::vec3(0.05f, 0.05f, 0.05f), // Ambient
 		glm::vec3(0.3f, 0.3f, 0.3f), 	// Diffuse
 		glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
 	
 	PointLight pt_light(
 		glm::vec3(1.2f, 1.0f, 2.0f), 	// Position
-		glm::vec3(0.1f, 0.1f, 0.1f), 	// Ambient
+		glm::vec3(0.05f, 0.05f, 0.05f), // Ambient
 		glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
 		glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
+	
+	SpotLight spot_light(
+		camera.position(),		// Position
+		camera.front(),			// Direction
+		glm::vec3(0.0f, 0.0f, 0.0f), 	// Ambient
+		glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
+		glm::vec3(1.0f, 1.0f, 1.0f),	// Specular
+		glm::cos(glm::radians(12.5f))); // Cut off
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
@@ -300,6 +308,9 @@ main(void)
 			(float)WIN_RES_X / (float)WIN_RES_Y,
 			0.1f,
 			100.0f);
+		
+		spot_light.position = camera.position();
+		spot_light.direction = camera.front();
 		
 		// Clear the drawing buffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -338,6 +349,26 @@ main(void)
 			"dir_light.diffuse", dir_light.diffuse);
 		material_shader.set_uniform(
 			"dir_light.specular", dir_light.specular);
+		
+		// Spot light
+		material_shader.set_uniform(
+			"spot_light.position", spot_light.position);
+		material_shader.set_uniform(
+			"spot_light.direction", spot_light.direction);
+		material_shader.set_uniform(
+			"spot_light.ambient", spot_light.ambient);
+		material_shader.set_uniform(
+			"spot_light.diffuse", spot_light.diffuse);
+		material_shader.set_uniform(
+			"spot_light.specular", spot_light.specular);
+		material_shader.set_uniform(
+			"spot_light.cut_off_cos", spot_light.cut_off_cosine);
+		material_shader.set_uniform(
+			"spot_light.constant", spot_light.att_constant);
+		material_shader.set_uniform(
+			"spot_light.linear", spot_light.att_linear);
+		material_shader.set_uniform(
+			"spot_light.quadratic", spot_light.att_quadratic);
 		
 		// Material
 		material_shader.set_uniform(
