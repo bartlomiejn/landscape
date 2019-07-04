@@ -288,7 +288,8 @@ main(void)
 		glm::vec3(0.0f, 0.0f, 0.0f), 	// Ambient
 		glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
 		glm::vec3(1.0f, 1.0f, 1.0f),	// Specular
-		glm::cos(glm::radians(12.5f))); // Cut off
+		glm::cos(glm::radians(12.5f)),	// Inner cut off
+		glm::cos(glm::radians(17.5f))); // Outer cut off
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
@@ -362,7 +363,10 @@ main(void)
 		material_shader.set_uniform(
 			"spot_light.specular", spot_light.specular);
 		material_shader.set_uniform(
-			"spot_light.cut_off_cos", spot_light.cut_off_cosine);
+			"spot_light.cut_off_cos", spot_light.cut_off_cos);
+		material_shader.set_uniform(
+			"spot_light.outer_cut_off_cos",
+			spot_light.outer_cut_off_cos);
 		material_shader.set_uniform(
 			"spot_light.constant", spot_light.att_constant);
 		material_shader.set_uniform(

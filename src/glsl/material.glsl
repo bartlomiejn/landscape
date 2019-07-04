@@ -34,6 +34,7 @@ struct SpotLight
 	vec3 diffuse;
 	vec3 specular;
 	float cut_off_cos;
+	float outer_cut_off_cos;
 	float constant;
 	float linear;
 	float quadratic;
@@ -76,7 +77,7 @@ vec3 dir_light_contribution(DirLight light, vec3 normal, vec3 view_dir)
 }
 
 vec3 pt_light_contribution(
-PointLight light, vec3 normal, vec3 view_dir, vec3 frag_pos
+	PointLight light, vec3 normal, vec3 view_dir, vec3 frag_pos
 ){
 	vec3 light_dir = normalize(light.position - frag_pos);
 	vec3 reflect_dir = reflect(-light_dir, normal);
@@ -128,30 +129,27 @@ SpotLight light, vec3 normal, vec3 view_dir, vec3 frag_pos
 	// with just the cosine.
 	float theta_cos = dot(light_dir, normalize(-light.direction));
 
-	// For values between 0 and 90 degrees, the cosine is descending from 1
-	// towards 0, so bigger theta actually equals a smaller angle
-	if (theta_cos > light.cut_off_cos)
-	{
-		// Diffuse
-		float diff = max(dot(normal, light_dir), 0.0);
-		vec3 diffuse = vec3(texture(material.diffuse, tex_coords))
-			* diff
-			* light.diffuse
-			* attenuation;
+	float epsilon = light.cut_off_cos - light.outer_cut_off_cos;
+	float intensity =
+		clamp((theta_cos - light.outer_cut_off_cos) / epsilon, 0.0, 1.0);
 
-		// Specular
-		float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
-		vec3 specular = vec3(texture(material.specular, tex_coords))
-			* spec
-			* light.specular
-			* attenuation;
+	// Diffuse
+	float diff = max(dot(normal, light_dir), 0.0);
+	vec3 diffuse = vec3(texture(material.diffuse, tex_coords))
+		* diff
+		* light.diffuse
+		* attenuation
+		* intensity;
 
-		return ambient + diffuse + specular;
-	}
-	else
-	{
-		return ambient;
-	}
+	// Specular
+	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
+	vec3 specular = vec3(texture(material.specular, tex_coords))
+		* spec
+		* light.specular
+		* attenuation
+		* intensity;
+
+	return ambient + diffuse + specular;
 }
 
 void main()

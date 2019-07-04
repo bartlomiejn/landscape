@@ -58,21 +58,23 @@ public:
 	/// \param amb Ambient light component
 	/// \param diff Diffuse component
 	/// \param spec Specular component
-	/// \param cutoff_cosine Cosine of the cutoff angle in radians
+	/// \param cutoff_cos Cosine of the cutoff angle in radians
 	/// \param att_const Attenuation constant parameter
 	/// \param att_lin Attenuation linear parameter
 	/// \param att_quad Attenuation quadratic parameter
 	SpotLight(
 		glm::vec3 pos, glm::vec3 dir, glm::vec3 amb, glm::vec3 diff,
-		glm::vec3 spec, float cutoff_cosine, float att_const = 1.0,
-		float att_lin = 0.027, float att_quad = 0.0028
+		glm::vec3 spec, float cutoff_cos, float outer_cutoff_cos,
+		float att_const = 1.0, float att_lin = 0.027,
+		float att_quad = 0.0028
 	):
 		position(pos),
 		direction(dir),
 		ambient(amb),
 		diffuse(diff),
 		specular(spec),
-		cut_off_cosine(cutoff_cosine),
+		cut_off_cos(cutoff_cos),
+		outer_cut_off_cos(outer_cutoff_cos),
 		att_constant(att_const),
 		att_linear(att_lin),
 		att_quadratic(att_quad)
@@ -84,7 +86,8 @@ public:
 	glm::vec3 diffuse;
 	glm::vec3 specular;
 	
-	float cut_off_cosine;
+	float cut_off_cos;
+	float outer_cut_off_cos;
 	
 	float att_constant;
 	float att_linear;
