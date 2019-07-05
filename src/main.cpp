@@ -314,6 +314,9 @@ unsigned int debug_quad_vbo;
 void
 debug_shadow_map_pass()
 {
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_DEPTH_TEST);
 	depth_debug_shader.use();
 	depth_debug_shader.set_uniform("light_space_matrix", light_space_matrix);
 	if (debug_quad_vao == 0)
@@ -341,7 +344,6 @@ debug_shadow_map_pass()
 			(void *)(3 * sizeof(float)));
 	}
 	glBindVertexArray(debug_quad_vao);
-	glDisable(GL_DEPTH_TEST);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, depth_map);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -384,8 +386,6 @@ main(void)
 	
 	// Resize OpenGL viewport to initial window resolution
 	on_fb_resize(nullptr, window_width, window_height);
-	
-	glEnable(GL_DEPTH_TEST);
 	
 	// Compile and link triangle shader
 	try
@@ -491,6 +491,8 @@ main(void)
 		last_frame = current_frame;
 		
 		handle_keyboard_input(window);
+		
+		glEnable(GL_DEPTH_TEST);
 		
 		shadow_map_pass();
 		draw_objects_pass();
