@@ -43,19 +43,45 @@ struct SpotLight
 	float quadratic;
 };
 
+in vec3 normal;
 in vec2 tex_coords;
 in vec3 frag_pos;
-in vec3 normal;
+
+in vec4 frag_pos_light_space;
+
+uniform vec3 light_pos;
+uniform sampler2D shadow_map;
 
 uniform vec3 view_pos;
+
 uniform Material material;
+
 uniform DirLight dir_light;
 uniform PointLight pt_lights[MAX_POINT_LIGHTS];
 uniform SpotLight spot_lights[MAX_POINT_LIGHTS];
+
 uniform int pt_light_count;
 uniform int spot_light_count;
 
 out vec4 FragColor;
+
+float is_in_shadow(vec4 frag_pos_light_space)
+{
+	// Perform perspective divide (does nothing on ortographic projection),
+	// calculates fragment's light space pos in [-1, 1] range
+	vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
+
+	// Convert from [-1, 1] to [0, 1]
+	proj_coords = proj_coords * 0.5 + 0.5;
+
+	// Get the transformed fragment depth from the depth buffer
+	float closest_depth = texture(shadow_map, proj_coords.xy).r;
+	float current_depth = proj_coords.z;
+
+	float shadow = current_depth > closest_depth ? 1.0 : 0.0;
+
+	return shadow;
+}
 
 vec3 dir_light_contribution(DirLight light, vec3 normal, vec3 view_dir)
 {
@@ -109,11 +135,13 @@ vec3 pt_light_contribution(
 		* light.specular
 		* attenuation;
 
-	return (ambient + diffuse + specular);
+	float shadow = is_in_shadow(frag_pos_light_space);
+
+	return (ambient + (1.0 - shadow) * (diffuse + specular));
 }
 
 vec3 spot_light_contribution(
-SpotLight light, vec3 normal, vec3 view_dir, vec3 frag_pos
+	SpotLight light, vec3 normal, vec3 view_dir, vec3 frag_pos
 ){
 	vec3 light_dir = normalize(light.position - frag_pos);
 	vec3 reflect_dir = reflect(-light_dir, normal);

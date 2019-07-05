@@ -67,8 +67,8 @@ configure_file(
         ${CMAKE_BINARY_DIR}/output/glsl/material.glsl
         COPYONLY)
 configure_file(
-        ${PROJECT_SOURCE_DIR}/src/glsl/light.glsl
-        ${CMAKE_BINARY_DIR}/output/glsl/light.glsl
+        ${PROJECT_SOURCE_DIR}/src/glsl/white.glsl
+        ${CMAKE_BINARY_DIR}/output/glsl/white.glsl
         COPYONLY)
 configure_file(
         ${PROJECT_SOURCE_DIR}/src/glsl/shadowmap_vertex.glsl
@@ -77,6 +77,15 @@ configure_file(
 configure_file(
         ${PROJECT_SOURCE_DIR}/src/glsl/shadowmap_frag.glsl
         ${CMAKE_BINARY_DIR}/output/glsl/shadowmap_frag.glsl
+        COPYONLY)
+configure_file(
+        ${PROJECT_SOURCE_DIR}/src/glsl/shadowmap_vertex_quad.glsl
+        ${CMAKE_BINARY_DIR}/output/glsl/shadowmap_vertex_quad.glsl
+        COPYONLY)
+
+configure_file(
+        ${PROJECT_SOURCE_DIR}/src/glsl/shadowmap_frag_quad.glsl
+        ${CMAKE_BINARY_DIR}/output/glsl/shadowmap_frag_quad.glsl
         COPYONLY)
 
 # Image assets
@@ -87,4 +96,8 @@ configure_file(
 configure_file(
         ${PROJECT_SOURCE_DIR}/assets/container2_spec.png
         ${CMAKE_BINARY_DIR}/output/assets/container2_spec.png
+        COPYONLY)
+configure_file(
+        ${PROJECT_SOURCE_DIR}/assets/wood_diff.png
+        ${CMAKE_BINARY_DIR}/output/assets/wood_diff.png
         COPYONLY)
