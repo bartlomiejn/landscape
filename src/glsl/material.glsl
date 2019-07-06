@@ -61,6 +61,13 @@ uniform int spot_light_count;
 
 out vec4 FragColor;
 
+vec2 poissonDisk[4] = vec2[](
+	vec2(-0.94201624, -0.39906216),
+	vec2(0.94558609, -0.76890725),
+	vec2(-0.094184101, -0.92938870),
+	vec2(0.34495938, 0.29387760)
+);
+
 float is_in_shadow(vec4 frag_pos_light_space)
 {
 	// Perform perspective divide (does nothing on ortographic projection),
@@ -74,10 +81,13 @@ float is_in_shadow(vec4 frag_pos_light_space)
 	float closest_depth = texture(shadow_map, proj_coords.xy).r;
 	float current_depth = proj_coords.z;
 
-	float shadow = current_depth > closest_depth ? 1.0 : 0.0;
+	// Correct shadow acne by adding an error margin
+	float bias = 0.005;
+
+	float shadow = (current_depth - bias) > closest_depth ? 1.0 : 0.0;
 
 	if (proj_coords.z > 1.0)
-		shadow = 0.0;
+		shadow = 1.0;
 
 	return shadow;
 }

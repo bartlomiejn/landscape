@@ -122,7 +122,7 @@ PointLight pt_light(
 //	glm::cos(glm::radians(17.5f))); // Outer cut off
 
 SpotLight shadow_map_spot_light(
-	glm::vec3(-2.0f, 4.0f, -1.0f),	// Position
+	glm::vec3(-4.0f, 10.0f, -2.0f),	// Position
 	glm::vec3(0.0f, 0.0f, 0.1f),	// Direction
 	glm::vec3(0.1f, 0.1f, 0.1f), 	// Ambient
 	glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
@@ -156,7 +156,7 @@ unsigned int plane_vbo;		/// Plane vbo
 // Depth map
 
 float near_plane = 0.1f;
-float far_plane = 40.0f;
+float far_plane = 200.0f;
 
 unsigned int depth_map_fbo; 	/// Shadow depth map fbo
 unsigned int depth_map_tex;	/// Depth map buffer
@@ -219,8 +219,7 @@ void
 draw_cubes(Shader &shader)
 {
 	glBindVertexArray(cube_vao);
-	for (unsigned int i = 0; i < 2; i++)
-//	for (unsigned int i = 0; i < 10; i++)
+	for (unsigned int i = 0; i < 10; i++)
 	{
 		glm::mat4 model(1.0f);
 		model = glm::translate(model, cube_positions[i]);
@@ -304,8 +303,6 @@ draw_objects_pass()
 	material_shader.set_uniform("light_space_matrix", light_space_matrix);
 	material_shader.set_uniform("view_pos", camera.position());
 	material_shader.set_uniform("light_pos", light_pos);
-//	material_shader.set_dir_light(dir_light);
-//	material_shader.set_pt_light(pt_light);
 	material_shader.set_spot_light(shadow_map_spot_light);
 	material_shader.set_uniform(
 		"material.diffuse", 0);
@@ -316,30 +313,15 @@ draw_objects_pass()
 	
 	cont_diff_tex.use(GL_TEXTURE0);
 	cont_spec_tex.use(GL_TEXTURE1);
+	
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, depth_map_tex);
+	
 	draw_cubes(material_shader);
 	
 	wood_diff_tex.use(GL_TEXTURE0);
 	wood_diff_tex.use(GL_TEXTURE1); // Use as specular as well
 	draw_plane(material_shader);
-	
-	// Draw white cube for shadow map light and its direction position
-//	glm::mat4 model(1.0f);
-//	model = glm::translate(model, shadow_map_spot_light.position);
-//	model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-//	white_shader.use();
-//	white_shader.set_uniform("model", model);
-//	white_shader.set_uniform("view", view);
-//	white_shader.set_uniform("projection", projection);
-//	white_shader.set_uniform("light_space_matrix", light_space_matrix);
-//	glBindVertexArray(cube_vao);
-//	glDrawArrays(GL_TRIANGLES, 0, 36);
-//	model = glm::mat4(1.0f);
-//	model = glm::translate(model, shadow_map_spot_light.direction);
-//	model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-//	white_shader.set_uniform("model", model);
-//	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 unsigned int debug_quad_vao = 0;
@@ -463,15 +445,23 @@ main(void)
 		shadow_map_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
 	glFramebufferTexture2D(
-		GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map_tex,
-		0);
+		GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+		depth_map_tex, 0);
 	// Disable draw/read for color data, we want only depth
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
+	
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		std::cout << "Framebuffer generation failure." << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	// Generate vertex array & buffer object, copy vertices data,
