@@ -16,7 +16,7 @@ out vec4 frag_pos_light_space;
 
 void main()
 {
-	normal = mat3(transpose(inverse(model))) * aNormal;
+	normal = transpose(inverse(mat3(model))) * aNormal;
 	tex_coords = aTexCoords;
 	frag_pos = vec3(model * vec4(aPos, 1.0));
 	frag_pos_light_space = light_space_matrix * vec4(frag_pos, 1.0);

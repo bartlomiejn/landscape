@@ -76,6 +76,10 @@ Shader::try_create_and_link(void)
 	glDeleteShader(vert_shader);
 	glDeleteShader(frag_shader);
 	
+	set_uniform("is_dir_light", 0);
+	set_uniform("pt_light_count", 0);
+	set_uniform("spot_light_count", 0);
+	
 	id = program;
 }
 
@@ -117,7 +121,8 @@ MaterialShader::set_dir_light(DirectionalLight& light)
 	set_uniform("dir_light.direction", light.direction);
 	set_uniform("dir_light.ambient", light.ambient);
 	set_uniform("dir_light.diffuse", light.diffuse);
-	set_uniform("dir_light.specular", light.specular);	
+	set_uniform("dir_light.specular", light.specular);
+	set_uniform("is_dir_light", 1);
 }
 
 void

@@ -46,20 +46,16 @@ struct SpotLight
 in vec3 normal;
 in vec2 tex_coords;
 in vec3 frag_pos;
-
 in vec4 frag_pos_light_space;
 
 uniform vec3 light_pos;
 uniform sampler2D shadow_map;
-
 uniform vec3 view_pos;
-
 uniform Material material;
-
 uniform DirLight dir_light;
+uniform int is_dir_light;
 uniform PointLight pt_lights[MAX_POINT_LIGHTS];
-uniform SpotLight spot_lights[MAX_POINT_LIGHTS];
-
+uniform SpotLight spot_lights[MAX_SPOT_LIGHTS];
 uniform int pt_light_count;
 uniform int spot_light_count;
 
@@ -79,6 +75,9 @@ float is_in_shadow(vec4 frag_pos_light_space)
 	float current_depth = proj_coords.z;
 
 	float shadow = current_depth > closest_depth ? 1.0 : 0.0;
+
+	if (proj_coords.z > 1.0)
+		shadow = 0.0;
 
 	return shadow;
 }
@@ -135,9 +134,7 @@ vec3 pt_light_contribution(
 		* light.specular
 		* attenuation;
 
-	float shadow = is_in_shadow(frag_pos_light_space);
-
-	return (ambient + (1.0 - shadow) * (diffuse + specular));
+	return (ambient + diffuse + specular);
 }
 
 vec3 spot_light_contribution(
@@ -166,23 +163,25 @@ vec3 spot_light_contribution(
 	float intensity =
 		clamp((theta_cos - light.outer_cut_off_cos) / epsilon, 0.0, 1.0);
 
+	float shadow = is_in_shadow(frag_pos_light_space);
+
 	// Diffuse
-	float diff = max(dot(normal, light_dir), 0.0);
+	float diff = max(dot(light_dir, normal), 0.0);
 	vec3 diffuse = vec3(texture(material.diffuse, tex_coords))
 		* diff
 		* light.diffuse
-		* attenuation
-		* intensity;
+		* attenuation;
+//		* intensity;
 
 	// Specular
 	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
 	vec3 specular = vec3(texture(material.specular, tex_coords))
 		* spec
 		* light.specular
-		* attenuation
-		* intensity;
+		* attenuation;
+//		* intensity;
 
-	return ambient + diffuse + specular;
+	return (ambient + (1.0 - shadow) * (diffuse + specular));
 }
 
 void main()
@@ -190,12 +189,13 @@ void main()
 	vec3 norm = normalize(normal);
 	vec3 view_dir = normalize(view_pos - frag_pos);
 	vec3 output_color = vec3(0.0);
-	output_color += dir_light_contribution(dir_light, norm, view_dir);
+	if (is_dir_light > 0)
+		output_color += dir_light_contribution(dir_light, norm, view_dir);
 	for (int i = 0; i < pt_light_count; i++)
 		output_color +=
 			pt_light_contribution(pt_lights[i], norm, view_dir, frag_pos);
-	for (int i = 0; i < spot_light_count; i++)
+//	for (int i = 0; i < spot_light_count; i++)
 		output_color +=
-			spot_light_contribution(spot_lights[i], norm, view_dir, frag_pos);
+			spot_light_contribution(spot_lights[0], norm, view_dir, frag_pos);
 	FragColor = vec4(output_color, 1.0);
 }

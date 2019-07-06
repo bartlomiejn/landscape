@@ -65,8 +65,8 @@ public:
 	SpotLight(
 		glm::vec3 pos, glm::vec3 dir, glm::vec3 amb, glm::vec3 diff,
 		glm::vec3 spec, float cutoff_cos, float outer_cutoff_cos,
-		float att_const = 1.0, float att_lin = 0.027,
-		float att_quad = 0.0028
+		float att_const = 1.0, float att_lin = 0.007,
+		float att_quad = 0.0002
 	):
 		position(pos),
 		direction(dir),
