@@ -42,24 +42,13 @@ float mouse_sensitivity = 0.05f;
 float movement_speed = 2.5f;
 
 Camera camera(
-	glm::vec3(0.0f, 0.0f, 3.0f), // Position
-	glm::vec3(0.0f, 1.0f, 0.0f), // World up vector
-	0.0f, // Yaw
-	0.0f, // Pitch
-	45.0f); // FOV
-
-DirectionalLight dir_light(
-	glm::vec3(-0.2f, -1.0f, -0.3f), // Direction
-	glm::vec3(0.05f, 0.05f, 0.05f), // Ambient
-	glm::vec3(0.3f, 0.3f, 0.3f), 	// Diffuse
-	glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
-
-PointLight pt_light(
-	glm::vec3(1.2f, 1.0f, 2.0f), 	// Position
-	glm::vec3(0.05f, 0.05f, 0.05f), // Ambient
-	glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
-	glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
-
+	glm::vec3(0.0f, 0.0f, 3.0f), 	// Position
+	glm::vec3(0.0f, 1.0f, 0.0f), 	// World up vector
+	0.0f, 				// Yaw
+	0.0f, 				// Pitch
+	45.0f); 			// FOV
+	
+// TODO: Shading is based on a point light, but shadows are directional
 SpotLight shadow_map_spot_light(
 	glm::vec3(-4.0f, 10.0f, -2.0f),	// Position
 	glm::vec3(0.0f, 0.0f, 0.1f),	// Direction
@@ -68,8 +57,6 @@ SpotLight shadow_map_spot_light(
 	glm::vec3(1.0f, 1.0f, 1.0f),	// Specular
 	glm::cos(glm::radians(12.5f)),	// Inner cut off
 	glm::cos(glm::radians(17.5f))); // Outer cut off
-	
-// Shaders and textures
 
 MaterialShader material_shader("glsl/vertex.glsl", "glsl/material.glsl");
 Shader depth_map_shader(
@@ -86,15 +73,13 @@ Texture cont_diff_tex(cont_diff_img, layout_rgba);
 Texture cont_spec_tex(cont_spec_img, layout_rgba);
 Texture wood_diff_tex(wood_diff_img, layout_rgba);
 
-// Geometry
-
 Cube cube_mesh;
 Plane plane_mesh;
 
 // Depth map
 
 float near_plane = 0.1f;
-float far_plane = 200.0f;
+float far_plane = 100.0f;
 
 unsigned int depth_map_fbo; 	/// Shadow depth map fbo
 unsigned int depth_map_tex;	/// Depth map buffer
