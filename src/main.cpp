@@ -1,76 +1,23 @@
 #include <iostream>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
 #include <graphics/shader.h>
 #include <graphics/image.h>
 #include <graphics/camera.h>
 #include <graphics/texture.h>
 #include <graphics/light.h>
 #include <graphics/mesh.h>
+#include <graphics/primitives/cube.h>
+#include <graphics/primitives/plane.h>
 
 const unsigned int window_width = 1280;
 const unsigned int window_height = 720;
-
 const unsigned int shadow_map_width = 1024;
 const unsigned int shadow_map_height = 1024;
-
-float cube_verts[] = {
-	// Positions          // Normals           // Tex coords
-	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-	0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-	0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-	0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-	
-	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
-	0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,  1.0f, 0.0f,
-	0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
-	0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
-	
-	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-	
-	0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-	0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-	0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-	0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-	0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-	0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-	
-	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-	0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-	0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-	0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-	
-	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-	0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-	0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-	0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-};
-
-float plane_verts[] = {
-	// Positions           // Normals         // Tex coords
-	25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
-	-25.0f, -0.5f,  25.0f, 0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-	-25.0f, -0.5f, -25.0f, 0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
-	
-	25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
-	-25.0f, -0.5f, -25.0f, 0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
-	25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
-};
 
 glm::vec3 cube_positions[] = {
 	glm::vec3( 0.0f,  0.0f,  0.0f),
@@ -141,8 +88,8 @@ Texture wood_diff_tex(wood_diff_img, layout_rgba);
 
 // Geometry
 
-Mesh cube_mesh(cube_verts, 36, 8);
-Mesh plane_mesh(plane_verts, 6, 8);
+Cube cube_mesh;
+Plane plane_mesh;
 
 // Depth map
 
@@ -236,19 +183,13 @@ draw_plane(Shader &shader)
 void
 shadow_map_pass()
 {
-	glm::mat4 light_ortho_proj =
+	glm::mat4 light_proj =
 		glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-//	glm::mat4 light_proj = glm::perspective(
-//		glm::radians(70.0f),
-//		(float)shadow_map_width / (float)shadow_map_height,
-//		0.1f,
-//		50.0f);
-	
 	glm::mat4 light_view = glm::lookAt(
 		shadow_map_spot_light.position,
 		shadow_map_spot_light.direction,
 		glm::vec3(0.0f, 1.0f, 0.0f));
-	light_space_matrix = light_ortho_proj * light_view;
+	light_space_matrix = light_proj * light_view;
 	
 	depth_map_shader.use();
 	depth_map_shader.set_uniform("light_space_matrix", light_space_matrix);
@@ -427,14 +368,7 @@ main(void)
 	wood_diff_tex.load();
 	
 	cube_mesh.load();
-	cube_mesh.add_vertex_attrib_array(0, 3, (void *)0);
-	cube_mesh.add_vertex_attrib_array(1, 3, (void *)(3 * sizeof(float)));
-	cube_mesh.add_vertex_attrib_array(2, 2, (void *)(6 * sizeof(float)));
-	
 	plane_mesh.load();
-	plane_mesh.add_vertex_attrib_array(0, 3, (void*)nullptr);
-	plane_mesh.add_vertex_attrib_array(1, 3, (void*)(3 * sizeof(float)));
-	plane_mesh.add_vertex_attrib_array(2, 2, (void*)(6 * sizeof(float)));
 	
 	// Framebuffer object for rendering a depth map
 	glGenFramebuffers(1, &depth_map_fbo);

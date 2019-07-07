@@ -6,7 +6,7 @@ class Mesh
 public:
 	Mesh(float *verts, int verts_count, int vert_stride);
 	~Mesh();
-	void load();
+	virtual void load();
 	void use();
 	void draw();
 	void add_vertex_attrib_array(int index, int size, void *offset);
