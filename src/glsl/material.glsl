@@ -95,18 +95,23 @@ float is_in_shadow(vec4 frag_pos_light_space)
 	// Convert from [-1, 1] to [0, 1]
 	proj_coords = proj_coords * 0.5 + 0.5;
 
-	// Correct shadow acne by adding an error margin
+	// Correct shadow acne by adding an error margin and get current depth value
 	float bias = 0.005;
-	// Get current depth value
 	float current_depth = proj_coords.z - bias;
+
+	if (
+		proj_coords.z > 1.0 || proj_coords.x > 1.0 || proj_coords.x < 0.0
+		|| proj_coords.y > 1.0 || proj_coords.y < 0.0
+	)
+		return 0.0;
 
 	float visibility = 0.0;
 	for (int i = 0; i < 4; i++)
 	{
 		// Randomise the sample from the Poisson disk
+		// Can just use `i` for non-randomized samples
 		float random = pseudo_random(vec4(frag_pos, i));
 		int index = int(16.0 * random) % 16;
-		// Can just use `i`
 
 		// Sample the disk
 		vec2 offset = poisson_disk[index] / 700.0;
@@ -116,9 +121,6 @@ float is_in_shadow(vec4 frag_pos_light_space)
 		if (current_depth > closest_depth)
 			visibility += 0.25;
 	}
-
-	if (proj_coords.z > 1.0)
-		visibility = 1.0;
 
 	return visibility;
 }

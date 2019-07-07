@@ -10,8 +10,8 @@
 #include <graphics/light.h>
 #include <graphics/mesh.h>
 
-const unsigned int window_width = 800;
-const unsigned int window_height = 600;
+const unsigned int window_width = 1280;
+const unsigned int window_height = 720;
 
 const unsigned int shadow_map_width = 1024;
 const unsigned int shadow_map_height = 1024;
@@ -116,7 +116,7 @@ PointLight pt_light(
 SpotLight shadow_map_spot_light(
 	glm::vec3(-4.0f, 10.0f, -2.0f),	// Position
 	glm::vec3(0.0f, 0.0f, 0.1f),	// Direction
-	glm::vec3(0.2f, 0.2f, 0.2f), 	// Ambient
+	glm::vec3(0.3f, 0.3f, 0.3f), 	// Ambient
 	glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
 	glm::vec3(1.0f, 1.0f, 1.0f),	// Specular
 	glm::cos(glm::radians(12.5f)),	// Inner cut off
