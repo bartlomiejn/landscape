@@ -8,6 +8,7 @@
 #include <graphics/camera.h>
 #include <graphics/texture.h>
 #include <graphics/light.h>
+#include <graphics/mesh.h>
 
 const unsigned int window_width = 800;
 const unsigned int window_height = 600;
@@ -112,23 +113,16 @@ PointLight pt_light(
 	glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
 	glm::vec3(1.0f, 1.0f, 1.0f));	// Specular
 
-//SpotLight camera_spot_light(
-//	camera.position(),		// Position
-//	camera.front(),			// Direction
-//	glm::vec3(0.0f, 0.0f, 0.0f), 	// Ambient
-//	glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
-//	glm::vec3(1.0f, 1.0f, 1.0f),	// Specular
-//	glm::cos(glm::radians(12.5f)),	// Inner cut off
-//	glm::cos(glm::radians(17.5f))); // Outer cut off
-
 SpotLight shadow_map_spot_light(
 	glm::vec3(-4.0f, 10.0f, -2.0f),	// Position
 	glm::vec3(0.0f, 0.0f, 0.1f),	// Direction
-	glm::vec3(0.1f, 0.1f, 0.1f), 	// Ambient
+	glm::vec3(0.2f, 0.2f, 0.2f), 	// Ambient
 	glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
 	glm::vec3(1.0f, 1.0f, 1.0f),	// Specular
 	glm::cos(glm::radians(12.5f)),	// Inner cut off
 	glm::cos(glm::radians(17.5f))); // Outer cut off
+	
+// Shaders and textures
 
 MaterialShader material_shader("glsl/vertex.glsl", "glsl/material.glsl");
 Shader depth_map_shader(
@@ -147,11 +141,8 @@ Texture wood_diff_tex(wood_diff_img, layout_rgba);
 
 // Geometry
 
-unsigned int cube_vao; 		/// Cube vao
-unsigned int cube_vbo;		/// Cube vbo
-
-unsigned int plane_vao;		/// Plane vao
-unsigned int plane_vbo;		/// Plane vbo
+Mesh cube_mesh(cube_verts, 36, 8);
+Mesh plane_mesh(plane_verts, 6, 8);
 
 // Depth map
 
@@ -162,8 +153,6 @@ unsigned int depth_map_fbo; 	/// Shadow depth map fbo
 unsigned int depth_map_tex;	/// Depth map buffer
 
 glm::mat4 light_space_matrix;
-glm::vec3 light_pos(-2.0f, 4.0f, -1.0f);
-glm::vec3 light_dir(0.0f, 0.0f, 0.0f);
 
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
@@ -218,7 +207,7 @@ handle_keyboard_input(GLFWwindow *window)
 void
 draw_cubes(Shader &shader)
 {
-	glBindVertexArray(cube_vao);
+	cube_mesh.use();
 	for (unsigned int i = 0; i < 10; i++)
 	{
 		glm::mat4 model(1.0f);
@@ -230,7 +219,7 @@ draw_cubes(Shader &shader)
 		model = glm::rotate(
 			model, rotation, glm::vec3(0.5f, 1.0f, 0.0f));
 		shader.set_uniform("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		cube_mesh.draw();
 	}
 }
 
@@ -240,8 +229,8 @@ draw_plane(Shader &shader)
 	glm::mat4 model(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, -2.4f, 0.0f));
 	shader.set_uniform("model", model);
-	glBindVertexArray(plane_vao);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	plane_mesh.use();
+	plane_mesh.draw();
 }
 
 void
@@ -253,7 +242,7 @@ shadow_map_pass()
 //		glm::radians(70.0f),
 //		(float)shadow_map_width / (float)shadow_map_height,
 //		0.1f,
-//		20.0f);
+//		50.0f);
 	
 	glm::mat4 light_view = glm::lookAt(
 		shadow_map_spot_light.position,
@@ -302,7 +291,6 @@ draw_objects_pass()
 	material_shader.set_uniform("projection", projection);
 	material_shader.set_uniform("light_space_matrix", light_space_matrix);
 	material_shader.set_uniform("view_pos", camera.position());
-	material_shader.set_uniform("light_pos", light_pos);
 	material_shader.set_spot_light(shadow_map_spot_light);
 	material_shader.set_uniform(
 		"material.diffuse", 0);
@@ -411,12 +399,10 @@ main(void)
 		depth_map_shader.try_create_and_link();
 		depth_debug_shader.try_create_and_link();
 		white_shader.try_create_and_link();
+		
 		cont_diff_img.try_load();
 		cont_spec_img.try_load();
 		wood_diff_img.try_load();
-		cont_diff_tex.load();
-		cont_spec_tex.load();
-		wood_diff_tex.load();
 	}
 	catch (ShaderCompileFailure err)
 	{
@@ -436,6 +422,20 @@ main(void)
 		return -1;
 	}
 	
+	cont_diff_tex.load();
+	cont_spec_tex.load();
+	wood_diff_tex.load();
+	
+	cube_mesh.load();
+	cube_mesh.add_vertex_attrib_array(0, 3, (void *)0);
+	cube_mesh.add_vertex_attrib_array(1, 3, (void *)(3 * sizeof(float)));
+	cube_mesh.add_vertex_attrib_array(2, 2, (void *)(6 * sizeof(float)));
+	
+	plane_mesh.load();
+	plane_mesh.add_vertex_attrib_array(0, 3, (void*)nullptr);
+	plane_mesh.add_vertex_attrib_array(1, 3, (void*)(3 * sizeof(float)));
+	plane_mesh.add_vertex_attrib_array(2, 2, (void*)(6 * sizeof(float)));
+	
 	// Framebuffer object for rendering a depth map
 	glGenFramebuffers(1, &depth_map_fbo);
 	glGenTextures(1, &depth_map_tex);
@@ -454,61 +454,14 @@ main(void)
 	// Disable draw/read for color data, we want only depth
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
-	
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 	{
 		std::cout << "Framebuffer generation failure." << std::endl;
 		glfwTerminate();
 		return -1;
 	}
-	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	
-	// Generate vertex array & buffer object, copy vertices data,
-	// set to vertex attribute pointer at 0 and enable
-	size_t cube_vert_stride = 8 * sizeof(float);
-	glGenVertexArrays(1, &cube_vao);
-	glGenBuffers(1, &cube_vbo);
-	glBindVertexArray(cube_vao);
-	glBindBuffer(GL_ARRAY_BUFFER, cube_vbo);
-	glBufferData(
-		GL_ARRAY_BUFFER, sizeof(cube_verts), cube_verts,
-		GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(
-		0, 3, GL_FLOAT, GL_FALSE, cube_vert_stride, (void *)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(
-		1, 3, GL_FLOAT, GL_FALSE, cube_vert_stride,
-		(void *)(3 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(
-		2, 2, GL_FLOAT, GL_FALSE, cube_vert_stride,
-		(void *)(6 * sizeof(float)));
-	glBindVertexArray(0);
-	
-	// Generate plane OpenGL objects
-	size_t plane_vert_stride = 8 * sizeof(float);
-	glGenVertexArrays(1, &plane_vao);
-	glGenBuffers(1, &plane_vbo);
-	glBindVertexArray(plane_vao);
-	glBindBuffer(GL_ARRAY_BUFFER, plane_vbo);
-	glBufferData(
-		GL_ARRAY_BUFFER, sizeof(plane_verts), plane_verts,
-		GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(
-		0, 3, GL_FLOAT, GL_FALSE, plane_vert_stride, (void*)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(
-		1, 3, GL_FLOAT, GL_FALSE, plane_vert_stride,
-		(void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(
-		2, 2, GL_FLOAT, GL_FALSE, plane_vert_stride,
-		(void*)(6 * sizeof(float)));
-	glBindVertexArray(0);
-	
+
 	glEnable(GL_DEPTH_TEST);
 	
 	// Perform rendering loop
@@ -529,10 +482,6 @@ main(void)
 	}
 	
 	glDeleteFramebuffers(1, &depth_map_fbo);
-	glDeleteVertexArrays(1, &cube_vao);
-	glDeleteVertexArrays(1, &plane_vao);
-	glDeleteBuffers(1, &cube_vbo);
-	glDeleteBuffers(1, &cube_vao);
 	glfwTerminate();
 	
 	return 0;

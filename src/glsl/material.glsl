@@ -48,7 +48,6 @@ in vec2 tex_coords;
 in vec3 frag_pos;
 in vec4 frag_pos_light_space;
 
-uniform vec3 light_pos;
 uniform sampler2D shadow_map;
 uniform vec3 view_pos;
 uniform Material material;
@@ -61,12 +60,31 @@ uniform int spot_light_count;
 
 out vec4 FragColor;
 
-vec2 poissonDisk[4] = vec2[](
-	vec2(-0.94201624, -0.39906216),
-	vec2(0.94558609, -0.76890725),
-	vec2(-0.094184101, -0.92938870),
-	vec2(0.34495938, 0.29387760)
+vec2 poisson_disk[16] = vec2[](
+	vec2( -0.94201624, -0.39906216 ),
+	vec2( 0.94558609, -0.76890725 ),
+	vec2( -0.094184101, -0.92938870 ),
+	vec2( 0.34495938, 0.29387760 ),
+	vec2( -0.91588581, 0.45771432 ),
+	vec2( -0.81544232, -0.87912464 ),
+	vec2( -0.38277543, 0.27676845 ),
+	vec2( 0.97484398, 0.75648379 ),
+	vec2( 0.44323325, -0.97511554 ),
+	vec2( 0.53742981, -0.47373420 ),
+	vec2( -0.26496911, -0.41893023 ),
+	vec2( 0.79197514, 0.19090188 ),
+	vec2( -0.24188840, 0.99706507 ),
+	vec2( -0.81409955, 0.91437590 ),
+	vec2( 0.19984126, 0.78641367 ),
+	vec2( 0.14383161, -0.14100790 )
 );
+
+/// Generates a pseudo-random number in range of [0, 1]
+float pseudo_random(vec4 seed4)
+{
+	float dot_product = dot(seed4, vec4(12.9898, 78.233, 45.164, 94.673));
+	return fract(sin(dot_product) * 43758.5453);
+}
 
 float is_in_shadow(vec4 frag_pos_light_space)
 {
@@ -77,19 +95,32 @@ float is_in_shadow(vec4 frag_pos_light_space)
 	// Convert from [-1, 1] to [0, 1]
 	proj_coords = proj_coords * 0.5 + 0.5;
 
-	// Get the transformed fragment depth from the depth buffer
-	float closest_depth = texture(shadow_map, proj_coords.xy).r;
-	float current_depth = proj_coords.z;
-
 	// Correct shadow acne by adding an error margin
 	float bias = 0.005;
+	// Get current depth value
+	float current_depth = proj_coords.z - bias;
 
-	float shadow = (current_depth - bias) > closest_depth ? 1.0 : 0.0;
+	float visibility = 0.0;
+	for (int i = 0; i < 4; i++)
+	{
+		// Randomise the sample from the Poisson disk
+		float random = pseudo_random(vec4(frag_pos, i));
+		int index = int(16.0 * random) % 16;
+		// Can just use `i`
+
+		// Sample the disk
+		vec2 offset = poisson_disk[index] / 700.0;
+
+		// Get the closest fragment depth from the depth buffer
+		float closest_depth = texture(shadow_map, proj_coords.xy + offset).r;
+		if (current_depth > closest_depth)
+			visibility += 0.25;
+	}
 
 	if (proj_coords.z > 1.0)
-		shadow = 1.0;
+		visibility = 1.0;
 
-	return shadow;
+	return visibility;
 }
 
 vec3 dir_light_contribution(DirLight light, vec3 normal, vec3 view_dir)
@@ -169,6 +200,7 @@ vec3 spot_light_contribution(
 	// with just the cosine.
 	float theta_cos = dot(light_dir, normalize(-light.direction));
 
+	// TODO: Intensity (cutoff) calculation is broken
 	float epsilon = light.cut_off_cos - light.outer_cut_off_cos;
 	float intensity =
 		clamp((theta_cos - light.outer_cut_off_cos) / epsilon, 0.0, 1.0);
@@ -204,7 +236,7 @@ void main()
 	for (int i = 0; i < pt_light_count; i++)
 		output_color +=
 			pt_light_contribution(pt_lights[i], norm, view_dir, frag_pos);
-//	for (int i = 0; i < spot_light_count; i++)
+	for (int i = 0; i < spot_light_count; i++)
 		output_color +=
 			spot_light_contribution(spot_lights[0], norm, view_dir, frag_pos);
 	FragColor = vec4(output_color, 1.0);
