@@ -30,7 +30,6 @@ public:
 	void set_spot_light(SpotLight& light);
 };
 
-
 class ShaderCompileFailure {};
 class ShaderLinkFailure {};
 

@@ -11,10 +11,10 @@ float plane_verts[] = {
 	25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
 };
 
-Plane::Plane() : Mesh(plane_verts, 6, 8) {}
+PlaneMesh::PlaneMesh() : Mesh(plane_verts, 6, 8) {}
 
 void
-Plane::load()
+PlaneMesh::load()
 {
 	Mesh::load();
 	add_vertex_attrib_array(0, 3, (void*)nullptr);

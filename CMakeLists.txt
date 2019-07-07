@@ -49,7 +49,7 @@ set(SOURCES
         src/graphics/camera.cpp
         src/graphics/texture.cpp
         src/graphics/mesh.cpp
-        src/graphics/primitives/cube.cpp src/graphics/primitives/plane.cpp)
+        src/graphics/primitives/cube.cpp src/graphics/primitives/plane.cpp src/graphics/model.cpp)
 
 add_executable(landscape ${SOURCES})
 add_dependencies(landscape glfw glm)

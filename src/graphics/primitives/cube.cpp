@@ -45,10 +45,10 @@ float cube_verts[] = {
 	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 };
 
-Cube::Cube() : Mesh(cube_verts, 36, 8) {}
+CubeMesh::CubeMesh() : Mesh(cube_verts, 36, 8) {}
 
 void
-Cube::load()
+CubeMesh::load()
 {
 	Mesh::load();
 	add_vertex_attrib_array(0, 3, (void *)nullptr);

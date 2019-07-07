@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -11,6 +12,7 @@
 #include <graphics/texture.h>
 #include <graphics/light.h>
 #include <graphics/mesh.h>
+#include <graphics/model.h>
 #include <graphics/primitives/cube.h>
 #include <graphics/primitives/plane.h>
 
@@ -47,7 +49,6 @@ Camera camera(
 	0.0f, 				// Yaw
 	0.0f, 				// Pitch
 	45.0f); 			// FOV
-	
 // TODO: Shading is based on a point light, but shadows are directional
 SpotLight shadow_map_spot_light(
 	glm::vec3(-4.0f, 10.0f, -2.0f),	// Position
@@ -57,34 +58,30 @@ SpotLight shadow_map_spot_light(
 	glm::vec3(1.0f, 1.0f, 1.0f),	// Specular
 	glm::cos(glm::radians(12.5f)),	// Inner cut off
 	glm::cos(glm::radians(17.5f))); // Outer cut off
-
 MaterialShader material_shader("glsl/vertex.glsl", "glsl/material.glsl");
 Shader depth_map_shader(
 	"glsl/shadowmap_vertex.glsl", "glsl/shadowmap_frag.glsl");
 Shader depth_debug_shader(
 	"glsl/shadowmap_vertex_quad.glsl", "glsl/shadowmap_frag_quad.glsl");
 Shader white_shader("glsl/vertex.glsl", "glsl/white.glsl");
-
 Image cont_diff_img("assets/container2_diff.png");
 Image cont_spec_img("assets/container2_spec.png");
 Image wood_diff_img("assets/wood_diff.png");
-
 Texture cont_diff_tex(cont_diff_img, layout_rgba);
 Texture cont_spec_tex(cont_spec_img, layout_rgba);
 Texture wood_diff_tex(wood_diff_img, layout_rgba);
 
-Cube cube_mesh;
-Plane plane_mesh;
+CubeMesh cube_mesh;
+PlaneMesh plane_mesh;
+std::vector<Model> cubes;
+Model plane(&plane_mesh, &material_shader, glm::vec3(0.0f, -2.4f, 0.0f));
 
 // Depth map
-
+glm::mat4 light_view_projection;	/// Light depth map VP matrix
+unsigned int depth_map_fbo; 		/// Light depth map fbo
+unsigned int depth_map_tex;		/// Light depth map texture buffer
 float near_plane = 0.1f;
 float far_plane = 100.0f;
-
-unsigned int depth_map_fbo; 	/// Shadow depth map fbo
-unsigned int depth_map_tex;	/// Depth map buffer
-
-glm::mat4 light_space_matrix;
 
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
@@ -137,35 +134,6 @@ handle_keyboard_input(GLFWwindow *window)
 }
 
 void
-draw_cubes(Shader &shader)
-{
-	cube_mesh.use();
-	for (unsigned int i = 0; i < 10; i++)
-	{
-		glm::mat4 model(1.0f);
-		model = glm::translate(model, cube_positions[i]);
-		float angle = 20.0f * i;
-		float rotation =
-			(float)glfwGetTime() * glm::radians(50.0f)
-			+ glm::radians(angle);
-		model = glm::rotate(
-			model, rotation, glm::vec3(0.5f, 1.0f, 0.0f));
-		shader.set_uniform("model", model);
-		cube_mesh.draw();
-	}
-}
-
-void
-draw_plane(Shader &shader)
-{
-	glm::mat4 model(1.0f);
-	model = glm::translate(model, glm::vec3(0.0f, -2.4f, 0.0f));
-	shader.set_uniform("model", model);
-	plane_mesh.use();
-	plane_mesh.draw();
-}
-
-void
 shadow_map_pass()
 {
 	glm::mat4 light_proj =
@@ -174,18 +142,31 @@ shadow_map_pass()
 		shadow_map_spot_light.position,
 		shadow_map_spot_light.direction,
 		glm::vec3(0.0f, 1.0f, 0.0f));
-	light_space_matrix = light_proj * light_view;
+	light_view_projection = light_proj * light_view;
 	
 	depth_map_shader.use();
-	depth_map_shader.set_uniform("light_space_matrix", light_space_matrix);
+	depth_map_shader.set_uniform(
+		"light_space_matrix", light_view_projection);
 	
 	glViewport(0, 0, shadow_map_width, shadow_map_height);
 	glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	
-	draw_cubes(depth_map_shader);
-	draw_plane(depth_map_shader);
+	Shader *temp;
+	
+	for (unsigned int i = 0; i < 10; i++)
+	{
+		temp = cubes[i].shader;
+		cubes[i].shader = &depth_map_shader;
+		cubes[i].draw();
+		cubes[i].shader = temp;
+	}
+	
+	temp = plane.shader;
+	plane.shader = &depth_map_shader;
+	plane.draw();
+	plane.shader = temp;
 }
 
 void
@@ -215,27 +196,24 @@ draw_objects_pass()
 	material_shader.use();
 	material_shader.set_uniform("view", view);
 	material_shader.set_uniform("projection", projection);
-	material_shader.set_uniform("light_space_matrix", light_space_matrix);
+	material_shader.set_uniform("light_space_matrix", light_view_projection);
 	material_shader.set_uniform("view_pos", camera.position());
 	material_shader.set_spot_light(shadow_map_spot_light);
-	material_shader.set_uniform(
-		"material.diffuse", 0);
-	material_shader.set_uniform(
-		"material.specular", 1);
+	material_shader.set_uniform("material.diffuse", 0);
+	material_shader.set_uniform("material.specular", 1);
 	material_shader.set_uniform("material.shininess", 32.0f);
 	material_shader.set_uniform("shadow_map", 2);
 	
 	cont_diff_tex.use(GL_TEXTURE0);
 	cont_spec_tex.use(GL_TEXTURE1);
-	
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, depth_map_tex);
-	
-	draw_cubes(material_shader);
+	for (unsigned int i = 0; i < 10; i++)
+		cubes[i].draw();
 	
 	wood_diff_tex.use(GL_TEXTURE0);
 	wood_diff_tex.use(GL_TEXTURE1); // Use as specular as well
-	draw_plane(material_shader);
+	plane.draw();
 }
 
 unsigned int debug_quad_vao = 0;
@@ -248,7 +226,7 @@ debug_shadow_map_pass()
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
 	depth_debug_shader.use();
-	depth_debug_shader.set_uniform("light_space_matrix", light_space_matrix);
+	depth_debug_shader.set_uniform("light_space_matrix", light_view_projection);
 	if (debug_quad_vao == 0)
 	{
 		float quadVertices[] = {
@@ -380,6 +358,13 @@ main(void)
 		return -1;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	
+	// Prepare cubes
+	for (int i = 0; i < 10; i++)
+	{
+		Model cube(&cube_mesh, &material_shader, cube_positions[i]);
+		cubes.push_back(cube);
+	}
 
 	glEnable(GL_DEPTH_TEST);
 	
@@ -391,6 +376,17 @@ main(void)
 		last_frame = current_frame;
 		
 		handle_keyboard_input(window);
+		
+		// Update cube state
+		for (unsigned int i = 0; i < 10; i++)
+		{
+			float angle = 20.0f * i;
+			float rotation =
+				(float)glfwGetTime() * glm::radians(50.0f)
+				+ glm::radians(angle);
+			cubes[i].rotation_axis = glm::vec3(0.5f, 1.0f, 0.0f);
+			cubes[i].rotation_rad_angle = rotation;
+		}
 		
 		shadow_map_pass();
 		draw_objects_pass();

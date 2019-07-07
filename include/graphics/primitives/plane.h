@@ -3,10 +3,10 @@
 
 #include <graphics/mesh.h>
 
-class Plane : public Mesh
+class PlaneMesh : public Mesh
 {
 public:
-	Plane();
+	PlaneMesh();
 	void load() override;
 };
 
