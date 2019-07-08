@@ -30,6 +30,8 @@ Model::model_matrix()
 void
 Model::draw()
 {
+	if (shader == nullptr || mesh == nullptr)
+		return;
 	shader->set_uniform("model", model_matrix());
 	mesh->use();
 	mesh->draw();

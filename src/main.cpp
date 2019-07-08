@@ -49,6 +49,7 @@ Camera camera(
 	0.0f, 				// Yaw
 	0.0f, 				// Pitch
 	45.0f); 			// FOV
+	
 // TODO: Shading is based on a point light, but shadows are directional
 SpotLight shadow_map_spot_light(
 	glm::vec3(-4.0f, 10.0f, -2.0f),	// Position
@@ -58,25 +59,31 @@ SpotLight shadow_map_spot_light(
 	glm::vec3(1.0f, 1.0f, 1.0f),	// Specular
 	glm::cos(glm::radians(12.5f)),	// Inner cut off
 	glm::cos(glm::radians(17.5f))); // Outer cut off
+	
 MaterialShader material_shader("glsl/vertex.glsl", "glsl/material.glsl");
 Shader depth_map_shader(
 	"glsl/shadowmap_vertex.glsl", "glsl/shadowmap_frag.glsl");
 Shader depth_debug_shader(
 	"glsl/shadowmap_vertex_quad.glsl", "glsl/shadowmap_frag_quad.glsl");
 Shader white_shader("glsl/vertex.glsl", "glsl/white.glsl");
+
 Image cont_diff_img("assets/container2_diff.png");
 Image cont_spec_img("assets/container2_spec.png");
 Image wood_diff_img("assets/wood_diff.png");
+
 Texture cont_diff_tex(cont_diff_img, layout_rgba);
 Texture cont_spec_tex(cont_spec_img, layout_rgba);
 Texture wood_diff_tex(wood_diff_img, layout_rgba);
 
 CubeMesh cube_mesh;
 PlaneMesh plane_mesh;
+
 std::vector<Model> cubes;
 Model plane(&plane_mesh, &material_shader, glm::vec3(0.0f, -2.4f, 0.0f));
 
 // Depth map
+
+// TODO: Extract to a render pass object
 glm::mat4 light_view_projection;	/// Light depth map VP matrix
 unsigned int depth_map_fbo; 		/// Light depth map fbo
 unsigned int depth_map_tex;		/// Light depth map texture buffer
@@ -154,7 +161,6 @@ shadow_map_pass()
 	glClear(GL_DEPTH_BUFFER_BIT);
 	
 	Shader *temp;
-	
 	for (unsigned int i = 0; i < 10; i++)
 	{
 		temp = cubes[i].shader;
@@ -162,7 +168,6 @@ shadow_map_pass()
 		cubes[i].draw();
 		cubes[i].shader = temp;
 	}
-	
 	temp = plane.shader;
 	plane.shader = &depth_map_shader;
 	plane.draw();
@@ -172,8 +177,10 @@ shadow_map_pass()
 void
 draw_objects_pass()
 {
-	// Configure viewport to window settings
+	// TODO: On retina-like displays, the viewport should be multiplied by 2
+	// TODO: Find out how to check if the display is @2x
 	glViewport(0, 0, window_width, window_height);
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	// Clear the drawing buffer
@@ -226,11 +233,13 @@ debug_shadow_map_pass()
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
 	depth_debug_shader.use();
-	depth_debug_shader.set_uniform("light_space_matrix", light_view_projection);
+	depth_debug_shader.set_uniform(
+		"light_space_matrix", light_view_projection);
 	if (debug_quad_vao == 0)
 	{
+		// Full screen quad
 		float quadVertices[] = {
-			// positions        // texture Coords
+			// Positions        // Texture coords
 			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
 			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
 			1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
@@ -334,6 +343,7 @@ main(void)
 	plane_mesh.load();
 	
 	// Framebuffer object for rendering a depth map
+	// TODO: Extract depth map to Texture object
 	glGenFramebuffers(1, &depth_map_fbo);
 	glGenTextures(1, &depth_map_tex);
 	glBindTexture(GL_TEXTURE_2D, depth_map_tex);
