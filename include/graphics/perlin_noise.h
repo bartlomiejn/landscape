@@ -17,6 +17,7 @@ public:
 	double noise(double x, double y, double z);
 private:
 	int repeat;
+	
 	double fade(double t);
 	int inc(int num);
 	double grad(int hash, double x, double y, double z);
