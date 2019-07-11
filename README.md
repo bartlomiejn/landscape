@@ -3,7 +3,7 @@
 An OpenGL / GLFW based graphics engine.
 
 Features:
-- Phong-based materials
+- Phong material model
 - Directional, spot and point light sources
 - Shadow mapping
 - Noise generation
