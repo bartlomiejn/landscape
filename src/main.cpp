@@ -71,9 +71,9 @@ Image cont_diff_img("assets/container2_diff.png");
 Image cont_spec_img("assets/container2_spec.png");
 Image wood_diff_img("assets/wood_diff.png");
 
-Texture cont_diff_tex(cont_diff_img, layout_rgba);
-Texture cont_spec_tex(cont_spec_img, layout_rgba);
-Texture wood_diff_tex(wood_diff_img, layout_rgba);
+Texture cont_diff_tex(&cont_diff_img, layout_rgba);
+Texture cont_spec_tex(&cont_spec_img, layout_rgba);
+Texture wood_diff_tex(&wood_diff_img, layout_rgba);
 
 CubeMesh cube_mesh;
 PlaneMesh plane_mesh;

@@ -1,9 +1,7 @@
 #include <graphics/texture.h>
 
-Texture::Texture(Image& tex_image, ColorLayout tex_layout):
-	data(tex_image.data()),
-	width(tex_image.width()),
-	height(tex_image.height()),
+Texture::Texture(Image* tex_image, ColorLayout tex_layout):
+	image(tex_image),
 	layout(tex_layout)
 {}
 
@@ -20,6 +18,13 @@ Texture::Texture(
 void
 Texture::load()
 {
+	if (image != nullptr)
+	{
+		data = (unsigned char *)image->data();
+		width = image->width();
+		height = image->height();
+	}
+	
 	GLenum format;
 	switch (layout)
 	{

@@ -88,8 +88,7 @@ PerlinNoiseGenerator::noise(double x, double y, double z)
 		u);
 	y2 = lerp(x1, x2, v);
 	
-	// For convenience we bind the result to [0, 1] (theoretical min/max
-	// before is [-1, 1])
+	// For convenience we bind the result to [0, 1]
 	return (lerp(y1, y2, w) + 1) / 2;
 }
 

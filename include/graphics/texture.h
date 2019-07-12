@@ -21,7 +21,7 @@ public:
 	/// \param image Image to create a texture from. Should be loaded before
 	/// use.
 	/// \param layout Color layout to use.
-	Texture(Image& image, ColorLayout layout);
+	Texture(Image* image, ColorLayout layout);
 	
 	/// Generate an OpenGL texture from provided image data. `load` the
 	/// texture before use!
@@ -43,9 +43,10 @@ public:
 	void use(GLenum tex_unit);
 private:
 	unsigned int id;
-	const unsigned char *data;
-	const int width;
-	const int height;
+	Image* image;
+	unsigned char *data;
+	int width;
+	int height;
 	ColorLayout layout;
 };
 
