@@ -64,8 +64,8 @@ Texture::load()
 			break;
 	}
 	
-	glGenTextures(1, &id);
-	glBindTexture(GL_TEXTURE_2D, id);
+	glGenTextures(1, &identifier);
+	glBindTexture(GL_TEXTURE_2D, identifier);
 	glTexImage2D(
 		GL_TEXTURE_2D, 0, gl_internal_fmt, width, height, 0,
 		gl_pix_layout, gl_pix_type, data);
@@ -76,9 +76,15 @@ Texture::load()
 	glGenerateMipmap(GL_TEXTURE_2D);
 }
 
+unsigned int
+Texture::id()
+{
+	return identifier;
+}
+
 void
 Texture::use(GLenum tex_unit)
 {
 	glActiveTexture(tex_unit);
-	glBindTexture(GL_TEXTURE_2D, id);
+	glBindTexture(GL_TEXTURE_2D, identifier);
 }

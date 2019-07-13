@@ -23,8 +23,6 @@ enum FilterType
 class Texture
 {
 public:
-	unsigned int id;
-	
 	/// Generate an OpenGL texture from provided image data. `load` the
 	/// texture before use!
 	///
@@ -44,6 +42,9 @@ public:
 	/// \param layout Color layout to use.
 	Texture(Image* image, ColorLayout layout, FilterType filter);
 	
+	/// Retrieves the internal texture ID.
+	unsigned int id();
+	
 	/// Loads the texture.
 	void load();
 	
@@ -52,6 +53,8 @@ public:
 	/// \param tex_unit Texture unit to use.
 	void use(GLenum tex_unit);
 private:
+	unsigned int identifier;
+	
 	unsigned char *data;
 	int width;
 	int height;

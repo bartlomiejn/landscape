@@ -10,19 +10,24 @@
 #include <graphics/image.h>
 #include <graphics/camera.h>
 #include <graphics/texture.h>
+#include <graphics/framebuffer.h>
 #include <graphics/light.h>
 #include <graphics/mesh.h>
 #include <graphics/model.h>
 #include <graphics/primitives/cube.h>
 #include <graphics/primitives/plane.h>
+#include <graphics/perlin_noise.h>
 
 // TODO LIST
 //
-// TODO: Create a Framebuffer object
-// TODO: Extract render passes to a render pass object
-// TODO: Extract graphics rendering to its own object
-// TODO: Create platform-agnostic abstract types
-// TODO: Viewport should be scaled by 2x on Retina-like displays
+// TODO: (FEATURE) Procedural terrain generation
+// TODO: (IMPROVE) Extract framebuffers
+// TODO: (IMPROVE) Extract mouse and keyboard input
+// TODO: (IMPROVE) Extract render passes
+// TODO: (IMPROVE) Extract graphics rendering
+// TODO: (IMPROVE) Create platform-agnostic abstract types
+// TODO: (BUG) Shading is based on a point light, but shadow map is directional
+// TODO: (BUG) Viewport should be scaled by 2x on Retina-like displays
 
 const unsigned int window_width = 1280;
 const unsigned int window_height = 720;
@@ -58,7 +63,6 @@ Camera camera(
 	0.0f, 				// Pitch
 	45.0f); 			// FOV
 	
-// TODO: Shading is based on a point light, but shadows are directional
 SpotLight shadow_map_spot_light(
 	glm::vec3(-4.0f, 10.0f, -2.0f),	// Position
 	glm::vec3(0.0f, 0.0f, 0.1f),	// Direction
@@ -89,13 +93,16 @@ PlaneMesh plane_mesh;
 std::vector<Model> cubes;
 Model plane(&plane_mesh, &material_shader, glm::vec3(0.0f, -2.4f, 0.0f));
 
+PerlinNoiseGenerator noise_generator;
+
 // Depth map
 
-unsigned int depth_map_fbo; 		/// Light depth map fbo
-Texture depth_map_tex(			/// Light depth map texture used by fbo
+unsigned int depth_map_fboid;
+Texture depth_map_tex(				/// Light depth map texture
 	nullptr, shadow_map_width, shadow_map_height, layout_depth16,
 	filter_nearest);
-glm::mat4 light_view_projection;	/// Light depth map VP matrix
+Framebuffer depth_map_fb(&depth_map_tex);	/// Light depth map fbo
+glm::mat4 light_view_projection;		/// Light depth map VP matrix
 float near_plane = 0.1f;
 float far_plane = 100.0f;
 
@@ -152,6 +159,15 @@ handle_keyboard_input(GLFWwindow *window)
 void
 shadow_map_pass()
 {
+	glViewport(0, 0, shadow_map_width, shadow_map_height);
+	
+	depth_map_fb.use();
+	
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	
+	glEnable(GL_DEPTH_TEST);
+	
 	glm::mat4 light_proj =
 		glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
 	glm::mat4 light_view = glm::lookAt(
@@ -164,11 +180,8 @@ shadow_map_pass()
 	depth_map_shader.set_uniform(
 		"light_space_matrix", light_view_projection);
 	
-	glViewport(0, 0, shadow_map_width, shadow_map_height);
-	glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	
+	// Render the scene geometry with the simple depth map shader - we care
+	// only about the depth data
 	Shader *temp;
 	for (unsigned int i = 0; i < 10; i++)
 	{
@@ -181,6 +194,8 @@ shadow_map_pass()
 	plane.shader = &depth_map_shader;
 	plane.draw();
 	plane.shader = temp;
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void
@@ -221,8 +236,7 @@ draw_objects_pass()
 	
 	cont_diff_tex.use(GL_TEXTURE0);
 	cont_spec_tex.use(GL_TEXTURE1);
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, depth_map_tex.id);
+	depth_map_tex.use(GL_TEXTURE2);
 	for (unsigned int i = 0; i < 10; i++)
 		cubes[i].draw();
 	
@@ -237,9 +251,13 @@ unsigned int debug_quad_vbo;
 void
 debug_shadow_map_pass()
 {
+	glDisable(GL_DEPTH_TEST);
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	glDisable(GL_DEPTH_TEST);
+	
 	depth_debug_shader.use();
 	depth_debug_shader.set_uniform(
 		"light_space_matrix", light_view_projection);
@@ -270,9 +288,11 @@ debug_shadow_map_pass()
 	}
 	glBindVertexArray(debug_quad_vao);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, depth_map_tex.id);
+	glBindTexture(GL_TEXTURE_2D, depth_map_tex.id());
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	
 	glBindVertexArray(0);
+	
 	glEnable(GL_DEPTH_TEST);
 }
 
@@ -297,10 +317,13 @@ main(void)
 		glfwTerminate();
 		return -1;
 	}
+	
 	glfwMakeContextCurrent(window);
+	
 	glfwSetFramebufferSizeCallback(window, on_fb_resize);
 	glfwSetCursorPosCallback(window, handle_mouse_movement);
 	glfwSetScrollCallback(window, handle_mouse_scroll);
+	
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	
 	// Load GLAD
@@ -313,7 +336,7 @@ main(void)
 	// Resize OpenGL viewport to initial window resolution
 	on_fb_resize(nullptr, window_width, window_height);
 	
-	// Compile and link triangle shader
+	// Load all image assets, create textures and framebuffers
 	try
 	{
 		material_shader.try_create_and_link();
@@ -324,14 +347,28 @@ main(void)
 		cont_diff_img.try_load();
 		cont_spec_img.try_load();
 		wood_diff_img.try_load();
+		
+		depth_map_tex.load();
+		cont_diff_tex.load();
+		cont_spec_tex.load();
+		wood_diff_tex.load();
+		
+		cube_mesh.load();
+		plane_mesh.load();
+		
+		depth_map_fb.try_load();
+		depth_map_fb.set_draw(false);
+		depth_map_fb.set_read(false);
 	}
 	catch (ShaderCompileFailure err)
 	{
+		std::cout << "Shader compilation failure." << std::endl;
 		glfwTerminate();
 		return -1;
 	}
 	catch (ShaderLinkFailure err)
 	{
+		std::cout << "Shader link failure." << std::endl;
 		glfwTerminate();
 		return -1;
 	}
@@ -342,31 +379,12 @@ main(void)
 		glfwTerminate();
 		return -1;
 	}
-	
-	depth_map_tex.load();
-	
-	cont_diff_tex.load();
-	cont_spec_tex.load();
-	wood_diff_tex.load();
-	
-	cube_mesh.load();
-	plane_mesh.load();
-	
-	glGenFramebuffers(1, &depth_map_fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
-	glFramebufferTexture2D(
-		GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-		depth_map_tex.id, 0);
-	// Disable draw/read for color data, we want only depth
-	glDrawBuffer(GL_NONE);
-	glReadBuffer(GL_NONE);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	catch (FramebufferGenerationFailure err)
 	{
 		std::cout << "Framebuffer generation failure." << std::endl;
 		glfwTerminate();
 		return -1;
 	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	// Prepare cubes
 	for (int i = 0; i < 10; i++)
@@ -374,8 +392,6 @@ main(void)
 		Model cube(&cube_mesh, &material_shader, cube_positions[i]);
 		cubes.push_back(cube);
 	}
-
-	glEnable(GL_DEPTH_TEST);
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
@@ -405,7 +421,7 @@ main(void)
 		glfwPollEvents();
 	}
 	
-	glDeleteFramebuffers(1, &depth_map_fbo);
+	glDeleteFramebuffers(1, &depth_map_fboid);
 	glfwTerminate();
 	
 	return 0;
