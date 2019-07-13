@@ -16,6 +16,10 @@
 #include <graphics/primitives/cube.h>
 #include <graphics/primitives/plane.h>
 
+// TODO: Extract framebuffer object data to Framebuffer object
+// TODO: Extract render passes to a render pass object
+// TODO: Extract graphics rendering to its own object
+
 const unsigned int window_width = 1280;
 const unsigned int window_height = 720;
 const unsigned int shadow_map_width = 1024;
@@ -71,9 +75,9 @@ Image cont_diff_img("assets/container2_diff.png");
 Image cont_spec_img("assets/container2_spec.png");
 Image wood_diff_img("assets/wood_diff.png");
 
-Texture cont_diff_tex(&cont_diff_img, layout_rgba);
-Texture cont_spec_tex(&cont_spec_img, layout_rgba);
-Texture wood_diff_tex(&wood_diff_img, layout_rgba);
+Texture cont_diff_tex(&cont_diff_img, layout_rgba, filter_linear);
+Texture cont_spec_tex(&cont_spec_img, layout_rgba, filter_linear);
+Texture wood_diff_tex(&wood_diff_img, layout_rgba, filter_linear);
 
 CubeMesh cube_mesh;
 PlaneMesh plane_mesh;
@@ -83,10 +87,11 @@ Model plane(&plane_mesh, &material_shader, glm::vec3(0.0f, -2.4f, 0.0f));
 
 // Depth map
 
-// TODO: Extract to a render pass object
-glm::mat4 light_view_projection;	/// Light depth map VP matrix
 unsigned int depth_map_fbo; 		/// Light depth map fbo
-unsigned int depth_map_tex;		/// Light depth map texture buffer
+Texture depth_map_tex(			/// Light depth map texture used by fbo
+	nullptr, shadow_map_width, shadow_map_height, layout_depth16,
+	filter_nearest);
+glm::mat4 light_view_projection;	/// Light depth map VP matrix
 float near_plane = 0.1f;
 float far_plane = 100.0f;
 
@@ -214,7 +219,7 @@ draw_objects_pass()
 	cont_diff_tex.use(GL_TEXTURE0);
 	cont_spec_tex.use(GL_TEXTURE1);
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, depth_map_tex);
+	glBindTexture(GL_TEXTURE_2D, depth_map_tex.id);
 	for (unsigned int i = 0; i < 10; i++)
 		cubes[i].draw();
 	
@@ -262,7 +267,7 @@ debug_shadow_map_pass()
 	}
 	glBindVertexArray(debug_quad_vao);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, depth_map_tex);
+	glBindTexture(GL_TEXTURE_2D, depth_map_tex.id);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
 	glEnable(GL_DEPTH_TEST);
@@ -338,26 +343,16 @@ main(void)
 	cont_diff_tex.load();
 	cont_spec_tex.load();
 	wood_diff_tex.load();
+	depth_map_tex.load();
 	
 	cube_mesh.load();
 	plane_mesh.load();
 	
-	// Framebuffer object for rendering a depth map
-	// TODO: Extract depth map to Texture object
 	glGenFramebuffers(1, &depth_map_fbo);
-	glGenTextures(1, &depth_map_tex);
-	glBindTexture(GL_TEXTURE_2D, depth_map_tex);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, shadow_map_width,
-		shadow_map_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-		depth_map_tex, 0);
+		depth_map_tex.id, 0);
 	// Disable draw/read for color data, we want only depth
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);

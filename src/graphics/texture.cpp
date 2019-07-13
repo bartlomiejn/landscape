@@ -1,18 +1,20 @@
 #include <graphics/texture.h>
 
-Texture::Texture(Image* tex_image, ColorLayout tex_layout):
+Texture::Texture(Image* tex_image, ColorLayout tex_layout, FilterType filter):
 	image(tex_image),
-	layout(tex_layout)
+	layout(tex_layout),
+	filter(filter)
 {}
 
 Texture::Texture(
 	unsigned char *data, unsigned int width, unsigned int height,
-	ColorLayout layout
+	ColorLayout layout, FilterType filter
 ):
 	data(data),
 	width(width),
 	height(height),
-	layout(layout)
+	layout(layout),
+	filter(filter)
 {}
 
 void
@@ -25,30 +27,52 @@ Texture::load()
 		height = image->height();
 	}
 	
-	GLenum format;
+	GLenum gl_pix_layout;
+	GLenum gl_internal_fmt;
+	GLenum gl_pix_type = GL_UNSIGNED_BYTE;
 	switch (layout)
 	{
+		case layout_depth16:
+			gl_internal_fmt = GL_DEPTH_COMPONENT16;
+			gl_pix_layout = GL_DEPTH_COMPONENT;
+			gl_pix_type = GL_FLOAT;
+			break;
 		case layout_r:
-			format = GL_RED;
+			gl_internal_fmt = GL_RED;
+			gl_pix_layout = GL_RED;
 			break;
 		case layout_rgb:
-			format = GL_RGB;
+			gl_internal_fmt = GL_RGB;
+			gl_pix_layout = GL_RGB;
 			break;
 		case layout_rgba:
 		default:
-			format = GL_RGBA;
+			gl_internal_fmt = GL_RGBA;
+			gl_pix_layout = GL_RGBA;
+			break;
+	}
+	
+	GLenum gl_filter;
+	switch (filter)
+	{
+		case filter_nearest:
+			gl_filter = GL_NEAREST;
+			break;
+		case filter_linear:
+		default:
+			gl_filter = GL_LINEAR;
 			break;
 	}
 	
 	glGenTextures(1, &id);
 	glBindTexture(GL_TEXTURE_2D, id);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, gl_internal_fmt, width, height, 0,
+		gl_pix_layout, gl_pix_type, data);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, format, width, height, 0, format,
-		GL_UNSIGNED_BYTE, data);
 	glGenerateMipmap(GL_TEXTURE_2D);
 }
 
