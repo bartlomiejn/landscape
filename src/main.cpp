@@ -16,9 +16,13 @@
 #include <graphics/primitives/cube.h>
 #include <graphics/primitives/plane.h>
 
-// TODO: Extract framebuffer object data to Framebuffer object
+// TODO LIST
+//
+// TODO: Create a Framebuffer object
 // TODO: Extract render passes to a render pass object
 // TODO: Extract graphics rendering to its own object
+// TODO: Create platform-agnostic abstract types
+// TODO: Viewport should be scaled by 2x on Retina-like displays
 
 const unsigned int window_width = 1280;
 const unsigned int window_height = 720;
@@ -182,17 +186,16 @@ shadow_map_pass()
 void
 draw_objects_pass()
 {
-	// TODO: On retina-like displays, the viewport should be multiplied by 2
-	// TODO: Find out how to check if the display is @2x
 	glViewport(0, 0, window_width, window_height);
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
-	// Clear the drawing buffer
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_DEPTH_BUFFER_BIT);
+	
+	glEnable(GL_DEPTH_TEST);
 	
 	// Generate view matrix
 	glm::mat4 view = camera.view_matrix();
@@ -340,10 +343,11 @@ main(void)
 		return -1;
 	}
 	
+	depth_map_tex.load();
+	
 	cont_diff_tex.load();
 	cont_spec_tex.load();
 	wood_diff_tex.load();
-	depth_map_tex.load();
 	
 	cube_mesh.load();
 	plane_mesh.load();
