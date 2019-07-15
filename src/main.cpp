@@ -26,6 +26,8 @@
 // TODO: (IMPROVE) Extract other render passes
 // TODO: (IMPROVE) Extract graphics rendering
 // TODO: (IMPROVE) Create platform-agnostic abstract types
+// TODO: (IMPROVE) Convert C pointers to shared pointers
+// TODO: (IMPROVE) Find a way to use templates and still have header/implementation separation.
 // TODO: (BUG) Shading is based on a point light, but shadow map is directional
 // TODO: (BUG) Viewport should be scaled by 2x on Retina-like displays
 

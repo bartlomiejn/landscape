@@ -54,7 +54,7 @@ set(SOURCES
         src/graphics/primitives/plane.cpp
         src/graphics/model.cpp
         src/graphics/perlin_noise.cpp
-        src/graphics/render_pass/depth_map.cpp)
+        )
 
 add_executable(landscape ${SOURCES})
 add_dependencies(landscape glfw glm)
