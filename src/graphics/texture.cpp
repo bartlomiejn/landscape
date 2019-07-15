@@ -17,6 +17,11 @@ Texture::Texture(
 	filter(filter)
 {}
 
+Texture::~Texture()
+{
+	glDeleteTextures(1, &identifier);
+}
+
 void
 Texture::load()
 {

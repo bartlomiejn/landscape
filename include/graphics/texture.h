@@ -19,7 +19,6 @@ enum FilterType
 	filter_nearest,
 };
 
-
 class Texture
 {
 public:
@@ -33,6 +32,9 @@ public:
 	Texture(
 		unsigned char *data, unsigned int width, unsigned int height,
 		ColorLayout layout, FilterType filter);
+	
+	/// Destroys the OpenGL texture on deallocation
+	~Texture();
 	
 	/// Generates an OpenGL texture from provided image. `load` the
 	/// texture before use!

@@ -14,16 +14,16 @@
 #include <graphics/light.h>
 #include <graphics/mesh.h>
 #include <graphics/model.h>
+#include <graphics/perlin_noise.h>
 #include <graphics/primitives/cube.h>
 #include <graphics/primitives/plane.h>
-#include <graphics/perlin_noise.h>
+#include <graphics/render_pass/depth_map.h>
 
 // TODO LIST
 //
 // TODO: (FEATURE) Procedural terrain generation
-// TODO: (IMPROVE) Extract framebuffers
 // TODO: (IMPROVE) Extract mouse and keyboard input
-// TODO: (IMPROVE) Extract render passes
+// TODO: (IMPROVE) Extract other render passes
 // TODO: (IMPROVE) Extract graphics rendering
 // TODO: (IMPROVE) Create platform-agnostic abstract types
 // TODO: (BUG) Shading is based on a point light, but shadow map is directional
@@ -90,6 +90,7 @@ Texture wood_diff_tex(&wood_diff_img, layout_rgba, filter_linear);
 CubeMesh cube_mesh;
 PlaneMesh plane_mesh;
 
+std::vector<Model*> models;
 std::vector<Model> cubes;
 Model plane(&plane_mesh, &material_shader, glm::vec3(0.0f, -2.4f, 0.0f));
 
@@ -97,14 +98,13 @@ PerlinNoiseGenerator noise_generator;
 
 // Depth map
 
-unsigned int depth_map_fboid;
-Texture depth_map_tex(				/// Light depth map texture
+Texture depth_map_tex(
 	nullptr, shadow_map_width, shadow_map_height, layout_depth16,
 	filter_nearest);
-Framebuffer depth_map_fb(&depth_map_tex);	/// Light depth map fbo
-glm::mat4 light_view_projection;		/// Light depth map VP matrix
-float near_plane = 0.1f;
-float far_plane = 100.0f;
+Framebuffer depth_map_fb(&depth_map_tex);
+DepthMapRenderPass depth_map_pass(
+	shadow_map_spot_light, depth_map_shader, depth_map_fb, shadow_map_width,
+	shadow_map_height);
 
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
@@ -157,48 +157,6 @@ handle_keyboard_input(GLFWwindow *window)
 }
 
 void
-shadow_map_pass()
-{
-	glViewport(0, 0, shadow_map_width, shadow_map_height);
-	
-	depth_map_fb.use();
-	
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	
-	glEnable(GL_DEPTH_TEST);
-	
-	glm::mat4 light_proj =
-		glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-	glm::mat4 light_view = glm::lookAt(
-		shadow_map_spot_light.position,
-		shadow_map_spot_light.direction,
-		glm::vec3(0.0f, 1.0f, 0.0f));
-	light_view_projection = light_proj * light_view;
-	
-	depth_map_shader.use();
-	depth_map_shader.set_uniform(
-		"light_space_matrix", light_view_projection);
-	
-	// Render the scene geometry with the simple depth map shader - we care
-	// only about the depth data
-	Shader *temp;
-	for (unsigned int i = 0; i < 10; i++)
-	{
-		temp = cubes[i].shader;
-		cubes[i].shader = &depth_map_shader;
-		cubes[i].draw();
-		cubes[i].shader = temp;
-	}
-	temp = plane.shader;
-	plane.shader = &depth_map_shader;
-	plane.draw();
-	plane.shader = temp;
-	
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void
 draw_objects_pass()
 {
 	glViewport(0, 0, window_width, window_height);
@@ -226,7 +184,8 @@ draw_objects_pass()
 	material_shader.use();
 	material_shader.set_uniform("view", view);
 	material_shader.set_uniform("projection", projection);
-	material_shader.set_uniform("light_space_matrix", light_view_projection);
+	material_shader.set_uniform(
+		"light_space_matrix", depth_map_pass.light_view_projection());
 	material_shader.set_uniform("view_pos", camera.position());
 	material_shader.set_spot_light(shadow_map_spot_light);
 	material_shader.set_uniform("material.diffuse", 0);
@@ -260,7 +219,7 @@ debug_shadow_map_pass()
 	
 	depth_debug_shader.use();
 	depth_debug_shader.set_uniform(
-		"light_space_matrix", light_view_projection);
+		"light_space_matrix", depth_map_pass.light_view_projection());
 	if (debug_quad_vao == 0)
 	{
 		// Full screen quad
@@ -386,12 +345,14 @@ main(void)
 		return -1;
 	}
 	
-	// Prepare cubes
+	// Prepare drawables vector
 	for (int i = 0; i < 10; i++)
 	{
-		Model cube(&cube_mesh, &material_shader, cube_positions[i]);
-		cubes.push_back(cube);
+		cubes.push_back(
+			Model(&cube_mesh, &material_shader, cube_positions[i]));
+		models.push_back(&cubes[i]);
 	}
+	models.push_back(&plane);
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
@@ -413,7 +374,7 @@ main(void)
 			cubes[i].rotation_rad_angle = rotation;
 		}
 		
-		shadow_map_pass();
+		depth_map_pass.draw(models);
 		draw_objects_pass();
 //		debug_shadow_map_pass();
 		
@@ -421,7 +382,6 @@ main(void)
 		glfwPollEvents();
 	}
 	
-	glDeleteFramebuffers(1, &depth_map_fboid);
 	glfwTerminate();
 	
 	return 0;

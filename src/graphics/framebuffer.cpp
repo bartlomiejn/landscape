@@ -4,6 +4,11 @@ Framebuffer::Framebuffer(Texture *depth_texture):
 	depth_texture(depth_texture)
 {}
 
+Framebuffer::~Framebuffer()
+{
+	glDeleteFramebuffers(1, &id);
+}
+
 void
 Framebuffer::try_load()
 {

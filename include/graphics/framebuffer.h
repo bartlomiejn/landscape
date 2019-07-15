@@ -7,6 +7,7 @@ class Framebuffer
 {
 public:
 	Framebuffer(Texture *depth_texture);
+	~Framebuffer();
 	void try_load();
 	void use();
 	void set_draw(bool is_enabled);
