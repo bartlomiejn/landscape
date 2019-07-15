@@ -90,8 +90,8 @@ Texture wood_diff_tex(&wood_diff_img, layout_rgba, filter_linear);
 CubeMesh cube_mesh;
 PlaneMesh plane_mesh;
 
-std::vector<Model*> models;
-std::vector<Model> cubes;
+std::vector<std::shared_ptr<Model>> models;
+std::vector<std::shared_ptr<Model>> cubes;
 Model plane(&plane_mesh, &material_shader, glm::vec3(0.0f, -2.4f, 0.0f));
 
 PerlinNoiseGenerator noise_generator;
@@ -197,7 +197,7 @@ draw_objects_pass()
 	cont_spec_tex.use(GL_TEXTURE1);
 	depth_map_tex.use(GL_TEXTURE2);
 	for (unsigned int i = 0; i < 10; i++)
-		cubes[i].draw();
+		cubes[i].get()->draw();
 	
 	wood_diff_tex.use(GL_TEXTURE0);
 	wood_diff_tex.use(GL_TEXTURE1); // Use as specular as well
@@ -348,11 +348,12 @@ main(void)
 	// Prepare drawables vector
 	for (int i = 0; i < 10; i++)
 	{
-		cubes.push_back(
-			Model(&cube_mesh, &material_shader, cube_positions[i]));
-		models.push_back(&cubes[i]);
+		Model cube(&cube_mesh, &material_shader, cube_positions[i]);
+		std::shared_ptr<Model> cube_ptr = std::make_shared<Model>(cube);
+		cubes.push_back(cube_ptr);
+		models.push_back(cube_ptr);
 	}
-	models.push_back(&plane);
+	models.push_back(std::make_shared<Model>(plane));
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
@@ -370,8 +371,9 @@ main(void)
 			float rotation =
 				(float)glfwGetTime() * glm::radians(50.0f)
 				+ glm::radians(angle);
-			cubes[i].rotation_axis = glm::vec3(0.5f, 1.0f, 0.0f);
-			cubes[i].rotation_rad_angle = rotation;
+			cubes[i].get()->rotation_axis =
+				glm::vec3(0.5f, 1.0f, 0.0f);
+			cubes[i].get()->rotation_rad_angle = rotation;
 		}
 		
 		depth_map_pass.draw(models);

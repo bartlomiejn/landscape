@@ -1,6 +1,7 @@
 #ifndef LANDSCAPE_DEPTH_MAP_H
 #define LANDSCAPE_DEPTH_MAP_H
 
+#include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <graphics/light.h>
@@ -26,7 +27,7 @@ public:
 	/// Draws a depth map for provided models.
 	///
 	/// \tparam Container Container type
-	/// \param models Container of pointers to models
+	/// \param models Container of `std::reference_wrapper` of `Model`s
 	template <typename Container> void draw(Container models)
 	{
 		glViewport(0, 0, width, height);
@@ -50,7 +51,7 @@ public:
 		shader.set_uniform("light_space_matrix", light_vp);
 		
 		Shader *temp;
-		for (Model *model : models)
+		for (const std::shared_ptr<Model> &model : models)
 		{
 			temp = model->shader;
 			model->shader = &shader;
