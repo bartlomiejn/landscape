@@ -45,7 +45,7 @@ public:
 	Texture(Image* image, ColorLayout layout, FilterType filter);
 	
 	/// Retrieves the internal texture ID.
-	unsigned int id();
+	unsigned int id() const;
 	
 	/// Loads the texture.
 	void load();
@@ -53,7 +53,7 @@ public:
 	/// Uses the texture.
 	///
 	/// \param tex_unit Texture unit to use.
-	void use(GLenum tex_unit);
+	void use(GLenum tex_unit) const;
 private:
 	unsigned int identifier;
 	

@@ -42,7 +42,7 @@ public:
 	/// Draws a depth map for provided models.
 	///
 	/// \tparam Container Container type
-	/// \param models Container of `std::reference_wrapper` of `Model`s
+	/// \param models Container of pointers to `Model`s
 	template <typename Container>
 	void
 	draw(Container models)
@@ -68,7 +68,7 @@ public:
 		shader.set_uniform("light_space_matrix", light_vp);
 		
 		Shader *temp;
-		for (const std::shared_ptr<Model> &model : models)
+		for (const auto &model : models)
 		{
 			temp = model->shader;
 			model->shader = &shader;
@@ -88,6 +88,12 @@ public:
 	light_view_projection()
 	{
 		return light_vp;
+	}
+	
+	const Texture&
+	depth_texture()
+	{
+		return fb.get_depth_texture();
 	}
 private:
 	glm::mat4 light_vp;

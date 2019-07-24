@@ -18,6 +18,7 @@
 #include <graphics/primitives/cube.h>
 #include <graphics/primitives/plane.h>
 #include <graphics/render_pass/depth_map.h>
+#include <graphics/render_pass/draw_objects.h>
 
 // TODO LIST
 //
@@ -103,10 +104,23 @@ PerlinNoiseGenerator noise_generator;
 Texture depth_map_tex(
 	nullptr, shadow_map_width, shadow_map_height, layout_depth16,
 	filter_nearest);
-Framebuffer depth_map_fb(&depth_map_tex);
+Framebuffer depth_map_fb(depth_map_tex);
 DepthMapRenderPass depth_map_pass(
 	shadow_map_spot_light, depth_map_shader, depth_map_fb, shadow_map_width,
 	shadow_map_height);
+
+// Draw objects
+
+DrawObjectsRenderPass draw_pass(
+	shadow_map_spot_light,
+	material_shader,
+	camera,
+	cont_diff_tex,
+	cont_spec_tex,
+	wood_diff_tex,
+	depth_map_pass,
+	window_width,
+	window_height);
 
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
@@ -379,7 +393,7 @@ main(void)
 		}
 		
 		depth_map_pass.draw(models);
-		draw_objects_pass();
+		draw_pass.draw(models);
 //		debug_shadow_map_pass();
 		
 		glfwSwapBuffers(window);

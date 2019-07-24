@@ -82,13 +82,13 @@ Texture::load()
 }
 
 unsigned int
-Texture::id()
+Texture::id() const
 {
 	return identifier;
 }
 
 void
-Texture::use(GLenum tex_unit)
+Texture::use(GLenum tex_unit) const
 {
 	glActiveTexture(tex_unit);
 	glBindTexture(GL_TEXTURE_2D, identifier);
