@@ -6,7 +6,7 @@ double perlin(double x, double y, double z);
 class PerlinNoiseGenerator
 {
 public:
-	PerlinNoiseGenerator(int repeat = -1);
+	PerlinNoiseGenerator(int repeat = 0);
 	
 	/// Outputs a pseudorandom double in the range of [0, 1].
 	///

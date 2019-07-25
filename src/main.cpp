@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <range.h>
 #include <graphics/shader.h>
 #include <graphics/image.h>
 #include <graphics/camera.h>
@@ -25,7 +26,7 @@
 //
 // TODO: (FEATURE) Procedural terrain generation
 // TODO: (IMPROVE) Extract mouse and keyboard input
-// TODO: (IMPROVE) Extract other render passes
+// TODO: (IMPROVE) Extract depth map debug pass
 // TODO: (IMPROVE) Extract graphics rendering
 // TODO: (IMPROVE) Create platform-agnostic abstract types
 // TODO: (IMPROVE) Convert C pointers to shared pointers
@@ -94,14 +95,14 @@ Texture wood_diff_tex(&wood_diff_img, layout_rgba, filter_linear);
 Material cont_mtl(&cont_diff_tex, &cont_spec_tex, 32.0f);
 Material wood_mtl(&wood_diff_tex, &wood_diff_tex, 32.0f);
 
+// Meshes
+
 CubeMesh cube_mesh;
 PlaneMesh plane_mesh;
 
 std::vector<std::shared_ptr<Model>> models;
 std::vector<std::shared_ptr<Model>> cubes;
 Model plane(&plane_mesh, &mtl_shader, &wood_mtl, glm::vec3(0.0f, -2.4f, 0.0f));
-
-PerlinNoiseGenerator noise_generator;
 
 // Depth map
 
@@ -125,6 +126,10 @@ DrawObjectsRenderPass draw_pass(
 	depth_map_pass,
 	window_width,
 	window_height);
+
+// Terrain
+
+PerlinNoiseGenerator generator;
 
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
@@ -227,6 +232,34 @@ debug_shadow_map_pass()
 	glEnable(GL_DEPTH_TEST);
 }
 
+void
+create_terrain()
+{
+	const int x_sz = 128, y_sz = 128;
+	
+	Texture noise_tex(x_sz, y_sz, layout_r, filter_linear);
+	
+	// Generate a noise value for each pixel
+	for (int ix = 0; ix < x_sz; ix++)
+		for (int iy = 0; iy < y_sz; iy++)
+		{
+			// Convert to [0, 1] range (not sure if that's needed)
+			double x_noise = (1.0f / x_sz) * ix;
+			double y_noise = (1.0f / y_sz) * iy;
+			double noise = generator.noise(x_noise, y_noise, 1.0f);
+			
+			// Convert to a [0, 255] integer and insert into texture
+			noise_tex.data[ix + iy*ix] = (uint8_t)(255.0f * noise);
+			
+			std::cout << "x: " << x_noise << " y: " << y_noise
+				<< " noise: " << noise << " data: " << std::hex
+				<< noise_tex.data[ix + iy*ix] << std::endl;
+		}
+		
+	// Generate a texture on the GPU
+	noise_tex.load();
+}
+
 int
 main(void)
 {
@@ -327,6 +360,8 @@ main(void)
 		models.push_back(cube_ptr);
 	}
 	models.push_back(std::make_shared<Model>(plane));
+	
+	create_terrain();
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))

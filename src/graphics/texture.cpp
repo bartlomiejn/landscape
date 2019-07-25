@@ -1,9 +1,13 @@
 #include <graphics/texture.h>
 
-Texture::Texture(Image* tex_image, ColorLayout tex_layout, FilterType filter):
+Texture::Texture(Image* tex_image, ColorLayout layout, FilterType filter):
+	data(nullptr),
+	is_data_owner(false),
 	image(tex_image),
-	layout(tex_layout),
-	filter(filter)
+	width(tex_image->width()),
+	height(tex_image->height()),
+	tex_layout(layout),
+	tex_filter(filter)
 {}
 
 Texture::Texture(
@@ -11,14 +15,32 @@ Texture::Texture(
 	ColorLayout layout, FilterType filter
 ):
 	data(data),
+	is_data_owner(false),
 	width(width),
 	height(height),
-	layout(layout),
-	filter(filter)
+	tex_layout(layout),
+	tex_filter(filter),
+	image(nullptr)
+{}
+
+Texture::Texture(
+	unsigned int width, unsigned int height, ColorLayout layout,
+	FilterType filter
+):
+	data(new unsigned char[height * width]),
+	is_data_owner(true),
+	width(width),
+	height(height),
+	tex_layout(layout),
+	tex_filter(filter),
+	image(nullptr)
 {}
 
 Texture::~Texture()
 {
+	// If we're the owner of the data pointer, deallocate it once we're out
+	if (is_data_owner)
+		delete[] data;
 	glDeleteTextures(1, &identifier);
 }
 
@@ -35,7 +57,7 @@ Texture::load()
 	GLenum gl_pix_layout;
 	GLenum gl_internal_fmt;
 	GLenum gl_pix_type = GL_UNSIGNED_BYTE;
-	switch (layout)
+	switch (tex_layout)
 	{
 		case layout_depth16:
 			gl_internal_fmt = GL_DEPTH_COMPONENT16;
@@ -58,7 +80,7 @@ Texture::load()
 	}
 	
 	GLenum gl_filter;
-	switch (filter)
+	switch (tex_filter)
 	{
 		case filter_nearest:
 			gl_filter = GL_NEAREST;
