@@ -14,6 +14,7 @@
 #include <graphics/light.h>
 #include <graphics/mesh.h>
 #include <graphics/model.h>
+#include <graphics/material.h>
 #include <graphics/perlin_noise.h>
 #include <graphics/primitives/cube.h>
 #include <graphics/primitives/plane.h>
@@ -75,7 +76,7 @@ SpotLight shadow_map_spot_light(
 	glm::cos(glm::radians(12.5f)),	// Inner cut off
 	glm::cos(glm::radians(17.5f))); // Outer cut off
 	
-MaterialShader material_shader("glsl/vertex.glsl", "glsl/material.glsl");
+MaterialShader mtl_shader("glsl/vertex.glsl", "glsl/material.glsl");
 Shader depth_map_shader(
 	"glsl/shadowmap_vertex.glsl", "glsl/shadowmap_frag.glsl");
 Shader depth_debug_shader(
@@ -90,12 +91,15 @@ Texture cont_diff_tex(&cont_diff_img, layout_rgba, filter_linear);
 Texture cont_spec_tex(&cont_spec_img, layout_rgba, filter_linear);
 Texture wood_diff_tex(&wood_diff_img, layout_rgba, filter_linear);
 
+Material cont_mtl(&cont_diff_tex, &cont_spec_tex, 32.0f);
+Material wood_mtl(&wood_diff_tex, &wood_diff_tex, 32.0f);
+
 CubeMesh cube_mesh;
 PlaneMesh plane_mesh;
 
 std::vector<std::shared_ptr<Model>> models;
 std::vector<std::shared_ptr<Model>> cubes;
-Model plane(&plane_mesh, &material_shader, glm::vec3(0.0f, -2.4f, 0.0f));
+Model plane(&plane_mesh, &mtl_shader, &wood_mtl, glm::vec3(0.0f, -2.4f, 0.0f));
 
 PerlinNoiseGenerator noise_generator;
 
@@ -113,7 +117,7 @@ DepthMapRenderPass depth_map_pass(
 
 DrawObjectsRenderPass draw_pass(
 	shadow_map_spot_light,
-	material_shader,
+	mtl_shader,
 	camera,
 	cont_diff_tex,
 	cont_spec_tex,
@@ -170,54 +174,6 @@ handle_keyboard_input(GLFWwindow *window)
 		camera.move(direction_left, per_frame_speed);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.move(direction_right, per_frame_speed);
-}
-
-void
-draw_objects_pass()
-{
-	glViewport(0, 0, window_width, window_height);
-	
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	
-	glEnable(GL_DEPTH_TEST);
-	
-	// Generate view matrix
-	glm::mat4 view = camera.view_matrix();
-	
-	// Generate perspective projection
-	glm::mat4 projection = glm::perspective(
-		glm::radians(camera.fov()),
-		(float)window_width / (float)window_height,
-		0.1f,
-		100.0f);
-	
-	// Use the shader and configure its uniforms
-	material_shader.use();
-	material_shader.set_uniform("view", view);
-	material_shader.set_uniform("projection", projection);
-	material_shader.set_uniform(
-		"light_space_matrix", depth_map_pass.light_view_projection());
-	material_shader.set_uniform("view_pos", camera.position());
-	material_shader.set_spot_light(shadow_map_spot_light);
-	material_shader.set_uniform("material.diffuse", 0);
-	material_shader.set_uniform("material.specular", 1);
-	material_shader.set_uniform("material.shininess", 32.0f);
-	material_shader.set_uniform("shadow_map", 2);
-	
-	cont_diff_tex.use(GL_TEXTURE0);
-	cont_spec_tex.use(GL_TEXTURE1);
-	depth_map_tex.use(GL_TEXTURE2);
-	for (unsigned int i = 0; i < 10; i++)
-		cubes[i].get()->draw();
-	
-	wood_diff_tex.use(GL_TEXTURE0);
-	wood_diff_tex.use(GL_TEXTURE1); // Use as specular as well
-	plane.draw();
 }
 
 unsigned int debug_quad_vao = 0;
@@ -314,7 +270,7 @@ main(void)
 	// Load all image assets, create textures and framebuffers
 	try
 	{
-		material_shader.try_create_and_link();
+		mtl_shader.try_create_and_link();
 		depth_map_shader.try_create_and_link();
 		depth_debug_shader.try_create_and_link();
 		white_shader.try_create_and_link();
@@ -361,10 +317,11 @@ main(void)
 		return -1;
 	}
 	
-	// Prepare drawables vector
+	// Prepare drawables
 	for (int i = 0; i < 10; i++)
 	{
-		Model cube(&cube_mesh, &material_shader, cube_positions[i]);
+		Model cube(
+			&cube_mesh, &mtl_shader, &cont_mtl, cube_positions[i]);
 		std::shared_ptr<Model> cube_ptr = std::make_shared<Model>(cube);
 		cubes.push_back(cube_ptr);
 		models.push_back(cube_ptr);
@@ -387,9 +344,9 @@ main(void)
 			float rotation =
 				(float)glfwGetTime() * glm::radians(50.0f)
 				+ glm::radians(angle);
-			cubes[i].get()->rotation_axis =
+			cubes[i]->rotation_axis =
 				glm::vec3(0.5f, 1.0f, 0.0f);
-			cubes[i].get()->rotation_rad_angle = rotation;
+			cubes[i]->rotation_angle_rad = rotation;
 		}
 		
 		depth_map_pass.draw(models);

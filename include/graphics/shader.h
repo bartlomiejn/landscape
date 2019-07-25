@@ -8,6 +8,7 @@ class Shader
 {
 public:
 	Shader(const char* vert_filename, const char* frag_filename);
+	virtual ~Shader() = default;
 	void try_create_and_link(void);
 	void use(void);
 	void set_uniform(const char *name, int value);

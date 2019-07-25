@@ -66,15 +66,9 @@ public:
 		
 		shader.use();
 		shader.set_uniform("light_space_matrix", light_vp);
-		
-		Shader *temp;
+
 		for (const auto &model : models)
-		{
-			temp = model->shader;
-			model->shader = &shader;
-			model->draw();
-			model->shader = temp;
-		}
+			model->draw(shader);
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
