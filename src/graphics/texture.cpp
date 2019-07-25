@@ -1,4 +1,22 @@
 #include <graphics/texture.h>
+#include <iostream>
+
+int color_layout_byte_size(ColorLayout layout)
+{
+	switch (layout)
+	{
+		// I assume 16 means the bits in OpenGL?
+		case layout_depth16: 	return 2;
+		case layout_r: 		return 1;
+		case layout_rg: 	return 2;
+		case layout_rgb: 	return 3;
+		case layout_rgba: 	return 4;
+		default:
+			std::cout << __func__ <<  ": Unhandled type: "
+				<< std::hex << (int)layout << std::endl;
+			return -1;
+	}
+}
 
 Texture::Texture(Image* tex_image, ColorLayout layout, FilterType filter):
 	data(nullptr),
@@ -27,7 +45,7 @@ Texture::Texture(
 	unsigned int width, unsigned int height, ColorLayout layout,
 	FilterType filter
 ):
-	data(new unsigned char[height * width]),
+	data(new unsigned char [width * height * color_layout_byte_size(layout)]),
 	is_data_owner(true),
 	width(width),
 	height(height),

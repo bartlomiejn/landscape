@@ -24,13 +24,15 @@
 
 // TODO LIST
 //
-// TODO: (FEATURE) Procedural terrain generation
+// TODO: (FEATURE) (Terrain) Correctly display the noise texture
+// TODO: (FEATURE) (Terrain) Generate blocky terrain from the noise map
+// TODO: (IMPROVE) Add texture slots to `Material`
 // TODO: (IMPROVE) Extract mouse and keyboard input
 // TODO: (IMPROVE) Extract depth map debug pass
 // TODO: (IMPROVE) Extract graphics rendering
-// TODO: (IMPROVE) Create platform-agnostic abstract types
 // TODO: (IMPROVE) Convert C pointers to shared pointers
 // TODO: (IMPROVE) Find a way to use templates and still have header/implementation separation.
+// TODO: (IMPROVE) Create platform-agnostic abstract types
 // TODO: (BUG) Shading is based on a point light, but shadow map is directional
 // TODO: (BUG) Viewport should be scaled by 2x on Retina-like displays
 
@@ -77,7 +79,7 @@ SpotLight shadow_map_spot_light(
 	glm::cos(glm::radians(12.5f)),	// Inner cut off
 	glm::cos(glm::radians(17.5f))); // Outer cut off
 	
-MaterialShader mtl_shader("glsl/vertex.glsl", "glsl/material.glsl");
+MaterialShader mtl_shader("glsl/vertex.glsl");
 Shader depth_map_shader(
 	"glsl/shadowmap_vertex.glsl", "glsl/shadowmap_frag.glsl");
 Shader depth_debug_shader(
@@ -95,14 +97,13 @@ Texture wood_diff_tex(&wood_diff_img, layout_rgba, filter_linear);
 Material cont_mtl(&cont_diff_tex, &cont_spec_tex, 32.0f);
 Material wood_mtl(&wood_diff_tex, &wood_diff_tex, 32.0f);
 
-// Meshes
+// Drawables
 
 CubeMesh cube_mesh;
 PlaneMesh plane_mesh;
 
 std::vector<std::shared_ptr<Model>> models;
 std::vector<std::shared_ptr<Model>> cubes;
-Model plane(&plane_mesh, &mtl_shader, &wood_mtl, glm::vec3(0.0f, -2.4f, 0.0f));
 
 // Depth map
 
@@ -129,7 +130,12 @@ DrawObjectsRenderPass draw_pass(
 
 // Terrain
 
+const int noise_x_sz = 256;
+const int noise_y_sz = 256;
 PerlinNoiseGenerator generator;
+Texture noise_tex(noise_x_sz, noise_y_sz, layout_rgba, filter_linear);
+Material noise_mtl(&noise_tex, &noise_tex, 0.0f);
+Model plane(&plane_mesh, &mtl_shader, &noise_mtl, glm::vec3(0.0f, -2.4f, 0.0f));
 
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
@@ -235,25 +241,28 @@ debug_shadow_map_pass()
 void
 create_terrain()
 {
-	const int x_sz = 128, y_sz = 128;
-	
-	Texture noise_tex(x_sz, y_sz, layout_r, filter_linear);
-	
-	// Generate a noise value for each pixel
-	for (int ix = 0; ix < x_sz; ix++)
-		for (int iy = 0; iy < y_sz; iy++)
+	// Iterate through each pixel
+	for (int ix = 0; ix < noise_x_sz; ix++)
+		for (int iy = 0; iy < noise_y_sz; iy++)
 		{
-			// Convert to [0, 1] range (not sure if that's needed)
-			double x_noise = (1.0f / x_sz) * ix;
-			double y_noise = (1.0f / y_sz) * iy;
+			// Convert the index to [0, 1] range (not sure if that's
+			// needed)
+			double x_noise = (1.0f / noise_x_sz) * ix;
+			double y_noise = (1.0f / noise_y_sz) * iy;
 			double noise = generator.noise(x_noise, y_noise, 1.0f);
 			
 			// Convert to a [0, 255] integer and insert into texture
 			noise_tex.data[ix + iy*ix] = (uint8_t)(255.0f * noise);
 			
-			std::cout << "x: " << x_noise << " y: " << y_noise
-				<< " noise: " << noise << " data: " << std::hex
-				<< noise_tex.data[ix + iy*ix] << std::endl;
+			// Insert gray into all three channels
+			int pixel_idx = ix*3 + iy*ix*3;
+			noise_tex.data[pixel_idx] = (uint8_t)(255.0f * noise);
+			noise_tex.data[pixel_idx + 1] =
+				(uint8_t)(255.0f * noise);
+			noise_tex.data[pixel_idx + 2] =
+				(uint8_t)(255.0f * noise);
+			// A = 1
+			noise_tex.data[pixel_idx + 3] = (uint8_t)255;
 		}
 		
 	// Generate a texture on the GPU

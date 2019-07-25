@@ -9,9 +9,12 @@ enum ColorLayout
 {
 	layout_depth16,
 	layout_r,
+	layout_rg,
 	layout_rgb,
 	layout_rgba,
 };
+
+int color_layout_byte_size(ColorLayout layout);
 
 enum FilterType
 {
@@ -22,8 +25,7 @@ enum FilterType
 class Texture
 {
 public:
-	/// Pointer to texture storage if applicable.
-	unsigned char *data;
+	unsigned char *data; ///< Pointer to texture storage if applicable.
 	
 	/// Generates an OpenGL texture from provided image. `load` the
 	/// texture before use.
@@ -75,13 +77,13 @@ public:
 	/// Retrieves the texture filtering type.
 	FilterType filter() const;
 private:
-	unsigned int identifier;
-	bool is_data_owner;
-	int width;
-	int height;
-	ColorLayout tex_layout;
-	FilterType tex_filter;
-	Image* image;
+	unsigned int identifier; 	///< OpenGL identifier of the texture
+	bool is_data_owner;		///< Is the `data` buffer owned by us
+	int width;			///< Width of the texture
+	int height;			///< Height of the texture
+	ColorLayout tex_layout;		///< Pixel layout
+	FilterType tex_filter;		///< Filtering type
+	Image* image;			///< Image used, if used
 };
 
 #endif //LANDSCAPE_TEXTURE_H

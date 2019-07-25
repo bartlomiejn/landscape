@@ -27,7 +27,7 @@ Shader::try_create_and_link(void)
 	std::string vert_shader_src = vert_loader.read();
 	const char *vert_shader_csrc = vert_shader_src.c_str();
 	unsigned int vert_shader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vert_shader, 1, &vert_shader_csrc, NULL);
+	glShaderSource(vert_shader, 1, &vert_shader_csrc, nullptr);
 	glCompileShader(vert_shader);
 	if (!is_compile_success(vert_shader))
 	{
@@ -44,7 +44,7 @@ Shader::try_create_and_link(void)
 	std::string frag_shader_src = frag_loader.read();
 	const char *frag_shader_csrc = frag_shader_src.c_str();
 	unsigned int frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(frag_shader, 1, &frag_shader_csrc, NULL);
+	glShaderSource(frag_shader, 1, &frag_shader_csrc, nullptr);
 	glCompileShader(frag_shader);
 	if (!is_compile_success(frag_shader))
 	{
@@ -65,7 +65,7 @@ Shader::try_create_and_link(void)
 	glLinkProgram(program);
 	glGetProgramiv(program, GL_LINK_STATUS, &success);
 	if (!success) {
-		glGetProgramInfoLog(program, 512, NULL, info_log);
+		glGetProgramInfoLog(program, 512, nullptr, info_log);
 		std::cout
 			<< "Shader program linking failed.\n" << info_log
 			<< std::endl;
@@ -109,13 +109,26 @@ Shader::set_uniform(const char *name, glm::vec3 vec)
 	glUniform3f(model_loc, vec.x, vec.y, vec.z);
 }
 
-MaterialShader::MaterialShader(
-	const char* vert_filename, const char* frag_filename
-):
-	Shader(vert_filename, frag_filename)
+void
+Shader::use() const
+{
+	glUseProgram(id);
+}
+
+
+unsigned int
+Shader::get_uniform_location(const char *uniform) const
+{
+	return glGetUniformLocation(id, uniform);
+}
+
+// Material Shader
+
+MaterialShader::MaterialShader(const char* vert_filename):
+	Shader(vert_filename, "glsl/material.glsl")
 {};
 
-void 
+void
 MaterialShader::set_dir_light(DirectionalLight& light)
 {
 	set_uniform("dir_light.direction", light.direction);
@@ -138,7 +151,8 @@ MaterialShader::set_pt_light(PointLight& light)
 	set_uniform("pt_light_count", 1);
 }
 
-void MaterialShader::set_spot_light(SpotLight& light)
+void
+MaterialShader::set_spot_light(SpotLight& light)
 {
 	set_uniform("spot_lights[0].position", light.position);
 	set_uniform("spot_lights[0].direction", light.direction);
@@ -153,16 +167,3 @@ void MaterialShader::set_spot_light(SpotLight& light)
 	set_uniform("spot_lights[0].quadratic", light.att_quadratic);
 	set_uniform("spot_light_count", 1);
 }
-
-unsigned int
-Shader::get_uniform_location(const char *uniform)
-{
-	return glGetUniformLocation(id, uniform);
-}
-
-void
-Shader::use(void)
-{
-	glUseProgram(id);
-}
-
