@@ -96,6 +96,28 @@ Noise::Perlin::noise(double x, double y, double z) const
 	return (lerp(y1, y2, w) + 1) / 2;
 }
 
+double
+Noise::Perlin::octave_noise(
+	double x, double y, double z, int octaves, double persistence
+){
+	double total = 0;
+	double frequency = 1;
+	double amplitude = 1;
+	double max_val = 0;  // Used for normalizing result to 0.0 - 1.0
+	
+	for(int i = 0; i < octaves; i++) {
+		total += noise(x * frequency, y * frequency, z * frequency)
+			* amplitude;
+		
+		max_val += amplitude;
+		
+		amplitude *= persistence;
+		frequency *= 2;
+	}
+	
+	return total / max_val;
+}
+
 /// Fade function easing coordinate values so they will ease towards
 /// integral values, ending up smoothing the final output.
 /// 6t^5 - 15t^4 + 10t^3
@@ -165,7 +187,7 @@ Noise::Perlin::lerp(double a, double b, double x) const
 
 Noise::Image::Image(
 	Noise::Perlin perlin, int width, int height, ColorLayout layout,
-	float octave
+	float frequency
 ) : ::Image(nullptr, width, height, color_layout_byte_size(layout))
 {
 	int channels = color_layout_byte_size(layout);
@@ -178,14 +200,62 @@ Noise::Image::Image(
 		for (int iy = 0; iy < height; iy++)
 		{
 			// Convert the indices to [0, scale] range.
-			double x_noise = (octave / width) * ix;
-			double y_noise = (octave / height) * iy;
+			double x_noise = (frequency / width) * ix;
+			double y_noise = (frequency / height) * iy;
 			double noise = perlin.noise(x_noise, y_noise, 1.0f);
 			
 			// Convert to a [0, 255] int.
 			int pixel_idx =
 				(ix * channels) + (iy * width * channels);
 			int gray = (uint8_t)(255.0f * noise);
+			
+			// Insert in required channels. Unless its alpha, then
+			// just set it to 255.
+			switch (layout)
+			{
+				case layout_rgba:
+					data[pixel_idx + 3] = (uint8_t)255;
+				case layout_rgb:
+					data[pixel_idx + 2] = (uint8_t)gray;
+				case layout_rg:
+					data[pixel_idx + 1] = (uint8_t)gray;
+				case layout_r:
+					data[pixel_idx] = (uint8_t)gray;
+					break;
+				case layout_depth16:
+				default:
+					std::cout
+					<< "Unsupported ColorLayout type "
+						<< std::hex << layout << "."
+						<< std::endl;
+			}
+		}
+}
+
+Noise::Image::Image(
+	Noise::Perlin perlin, int width, int height, ColorLayout layout,
+	float frequency, int octaves, double persistence
+) : ::Image(nullptr, width, height, color_layout_byte_size(layout))
+{
+	int channels = color_layout_byte_size(layout);
+	
+	// Manually allocate the buffer.
+	data = new unsigned char[width * height * channels];
+	
+	// Iterate through each pixel.
+	for (int ix = 0; ix < width; ix++)
+		for (int iy = 0; iy < height; iy++)
+		{
+			// Convert the indices to [0, scale] range.
+			double xn = (frequency / width) * ix;
+			double yn = (frequency / height) * iy;
+			double noise = perlin.octave_noise(
+				xn, yn, 1.0f, octaves, persistence);
+			int gray = (uint8_t)(255.0f * noise);
+			
+			// Convert to a [0, 255] int.
+			int pixel_idx =
+				(ix * channels) + (iy * width * channels);
 			
 			// Insert in required channels. Unless its alpha, then
 			// just set it to 255.

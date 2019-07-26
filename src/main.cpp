@@ -124,17 +124,18 @@ std::vector<std::shared_ptr<Model>> cubes;
 
 // Terrain
 
-int chunk_sz = 48;
+int chunk_sz = 512;
 float height_offset = -114.5f;
 Noise::Image heightmap(
-	Noise::Perlin(), chunk_sz, chunk_sz, layout_rgb, 0.08f);
+	Noise::Perlin(), chunk_sz, chunk_sz, layout_rgb, 5.0f, 5, 0.6f);
 Texture      heightmap_tex(&heightmap, layout_rgb, filter_nearest);
 Material     heightmap_mtl(&heightmap_tex, &heightmap_tex, 0.0f);
 std::vector<std::shared_ptr<Model>> terrain_blocks;
 
 // Heightmap plane
 
-PlaneMesh    plane_mesh((float)chunk_sz, (float)chunk_sz, 1.0f);
+//PlaneMesh    plane_mesh((float)chunk_sz, (float)chunk_sz, 1.0f);
+PlaneMesh    plane_mesh(15.0f, 15.0f, 1.0f);
 Model        plane(
 	&plane_mesh, &mtl_shader, &heightmap_mtl, glm::vec3(-0.5f, -3.0f, -0.5f));
 
@@ -334,27 +335,27 @@ main(void)
 		return -1;
 	}
 	
-	// Prepare terrain blocks
-	for (int ix = 0; ix < chunk_sz; ix++)
-	{
-		for (int iz = 0; iz < chunk_sz; iz++)
-		{
-			// Sample the heightmap at (ix, iy) taking in mind the
-			// channel count
-			float y = (float)(heightmap.try_sample(ix, iz, 0));
-			glm::vec3 translation(
-				(float)ix - (float)chunk_sz / 2.0f,
-				y + height_offset,
-				(float)iz - (float)chunk_sz / 2.0f);
-			
-			auto cube_ptr = std::make_shared<Model>(
-				&cube_mesh, &mtl_shader, &ground_mtl,
-				translation);
-			
-			terrain_blocks.push_back(cube_ptr);
-			models.push_back(cube_ptr);
-		}
-	}
+//	// Prepare terrain blocks
+//	for (int ix = 0; ix < chunk_sz; ix++)
+//	{
+//		for (int iz = 0; iz < chunk_sz; iz++)
+//		{
+//			// Sample the heightmap at (ix, iy) taking in mind the
+//			// channel count
+//			float y = (float)(heightmap.try_sample(ix, iz, 0));
+//			glm::vec3 translation(
+//				(float)ix - (float)chunk_sz / 2.0f,
+//				y + height_offset,
+//				(float)iz - (float)chunk_sz / 2.0f);
+//
+//			auto cube_ptr = std::make_shared<Model>(
+//				&cube_mesh, &mtl_shader, &ground_mtl,
+//				translation);
+//
+//			terrain_blocks.push_back(cube_ptr);
+//			models.push_back(cube_ptr);
+//		}
+//	}
 
 	models.push_back(std::make_shared<Model>(plane));
 	

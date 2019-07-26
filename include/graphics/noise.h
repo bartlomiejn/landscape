@@ -1,6 +1,9 @@
 #ifndef LANDSCAPE_PERLIN_NOISE_H
 #define LANDSCAPE_PERLIN_NOISE_H
 
+#include <algorithm>
+#include <numeric>
+#include <memory>
 #include <graphics/image.h>
 #include <graphics/texture.h>
 
@@ -9,6 +12,7 @@ namespace Noise
 	/// An abstract 3D noise generator class.
 	class Generator
 	{
+	public:
 		virtual double noise(double x, double y, double z) const = 0;
 	};
 	
@@ -27,6 +31,10 @@ namespace Noise
 		/// \param z Z coordinate
 		/// \return Pseudorandom value in the range of [0, 1]
 		double noise(double x, double y, double z) const;
+		
+		double octave_noise(
+			double x, double y, double z, int octaves,
+			double persistence);
 	private:
 		int repeat;
 		
@@ -45,7 +53,7 @@ namespace Noise
 		/// Creates a composite noise generator.
 		/// \param generators Container of pointers to Generator
 		/// instances.
-		Composite(GenPtrArray generators): generators(generators) {};
+		Composite(GenPtrArray generators): array(generators) {};
 		
 		/// Outputs a pseudorandom double in the range of [0, 1].
 		///
@@ -55,11 +63,17 @@ namespace Noise
 		/// \return Pseudorandom value in the range of [0, 1]
 		double noise(double x, double y, double z) const
 		{
-			int size = generators.size();
-			
+			using GenPtr = std::shared_ptr<Generator>;
+			double sum = std::accumulate(
+				array.begin(), array.end(), 0.0f,
+				[&](GenPtr g1, GenPtr g2) {
+					return g1->noise(x, y, z)
+						+ g2->noise(x, y, z);
+				});
+			return sum / array.size();
 		};
 	private:
-		GenPtrArray generators;
+		GenPtrArray array;
 	};
 	
 	/// 2D noise encapsulated in an Image
@@ -70,13 +84,16 @@ namespace Noise
 		/// \param perlin Perlin noise generator instance.
 		/// \param width Width of the resulting image.
 		/// \param height Height of the resulting image.
-		/// \param channels Channel count - will fill all channels with
-		/// a gray color, unless its the fourth channel, which will be
-		/// filled with 255s.
-		/// \param octave Noise octave.
+		/// \param layout Layout of the resulting image.
+		/// \param frequency Frequency of the noise.
 		Image(
 			Perlin perlin, int width, int height,
-			ColorLayout layout, float octave = 5.0f);
+			ColorLayout layout, float frequency = 5.0f);
+		
+		Image(
+			Perlin perlin, int width, int height,
+			ColorLayout layout, float frequency, int octaves,
+			double persistence);
 		
 		/// Destroys the Image instance.
 		~Image();
