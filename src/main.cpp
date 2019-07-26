@@ -133,8 +133,8 @@ DrawObjectsRenderPass draw_pass(
 const int noise_x_sz = 1024;
 const int noise_y_sz = 1024;
 Noise::Image noise_img(
-	Noise::Perlin(), noise_x_sz, noise_y_sz, layout_rgba, 5.0f);
-Texture noise_tex(&noise_img, layout_rgba, filter_linear);
+	Noise::Perlin(), noise_x_sz, noise_y_sz, layout_rgb, 5.0f);
+Texture noise_tex(&noise_img, layout_rgb, filter_linear);
 Material noise_mtl(&noise_tex, &noise_tex, 0.0f);
 Model plane(&plane_mesh, &mtl_shader, &noise_mtl, glm::vec3(0.0f, -2.4f, 0.0f));
 

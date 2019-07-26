@@ -30,10 +30,8 @@ float *plane_vertices(float x_sz, float z_sz, float uv_scale)
 }
 
 PlaneMesh::PlaneMesh(float x_sz, float y_sz, float uv_scale):
-	Mesh(nullptr, plane_verts, plane_stride)
-{
-	vertices = plane_vertices(x_sz, y_sz, uv_scale);
-}
+	Mesh(plane_vertices(x_sz, y_sz, uv_scale), plane_verts, plane_stride)
+{}
 
 PlaneMesh::~PlaneMesh()
 {
@@ -44,7 +42,7 @@ void
 PlaneMesh::load()
 {
 	Mesh::load();
-	add_vertex_attrib_array(0, 3, (void*)nullptr);
-	add_vertex_attrib_array(1, 3, (void*)(3 * sizeof(float)));
-	add_vertex_attrib_array(2, 2, (void*)(6 * sizeof(float)));
+	add_vertex_attrib_array(0, 3, (void *)nullptr);
+	add_vertex_attrib_array(1, 3, (void *)(3 * sizeof(float)));
+	add_vertex_attrib_array(2, 2, (void *)(6 * sizeof(float)));
 }

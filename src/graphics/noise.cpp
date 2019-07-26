@@ -206,9 +206,6 @@ Noise::Image::Image(
 						<< std::endl;
 			}
 		}
-	
-	// Generate a texture on the GPU
-//	noise_tex.load();
 }
 
 Noise::Image::~Image()

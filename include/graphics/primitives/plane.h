@@ -18,8 +18,6 @@ public:
 	
 	/// Loads the mesh to the GPU.
 	void load() override;
-private:
-
 };
 
 #endif //LANDSCAPE_PLANE_H
