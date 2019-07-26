@@ -14,6 +14,7 @@ enum ColorLayout
 	layout_rgba,
 };
 
+/// Returns the byte size / channel count for a ColorLayout enum.
 int color_layout_byte_size(ColorLayout layout);
 
 enum FilterType

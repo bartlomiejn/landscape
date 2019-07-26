@@ -45,7 +45,7 @@ Texture::Texture(
 	unsigned int width, unsigned int height, ColorLayout layout,
 	FilterType filter
 ):
-	data(new unsigned char [width * height * color_layout_byte_size(layout)]),
+	data(new unsigned char[width * height * color_layout_byte_size(layout)]),
 	is_data_owner(true),
 	width(width),
 	height(height),
@@ -67,7 +67,7 @@ Texture::load()
 {
 	if (image != nullptr)
 	{
-		data = (unsigned char *)image->data();
+		data = image->data;
 		width = image->width();
 		height = image->height();
 	}

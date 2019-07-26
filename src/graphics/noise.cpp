@@ -1,5 +1,9 @@
-#include <graphics/perlin_noise.h>
+#include <iostream>
 #include <cmath>
+#include <cstdint>
+#include <graphics/noise.h>
+
+// Noise::Perlin
 
 /// Hash lookup table as defined by Ken Perlin. This is a randomly arranged array
 /// of all numbers from 0-255 inclusive.
@@ -23,10 +27,10 @@ int perms[] = {
 	78, 66, 215, 61, 156, 180
 };
 
-PerlinNoiseGenerator::PerlinNoiseGenerator(int repeat): repeat(repeat) {}
+Noise::Perlin::Perlin(int repeat): repeat(repeat) {}
 
 double
-PerlinNoiseGenerator::noise(double x, double y, double z)
+Noise::Perlin::noise(double x, double y, double z) const
 {
 	if (repeat)
 	{
@@ -96,13 +100,13 @@ PerlinNoiseGenerator::noise(double x, double y, double z)
 /// integral values, ending up smoothing the final output.
 /// 6t^5 - 15t^4 + 10t^3
 double
-PerlinNoiseGenerator::fade(double t)
+Noise::Perlin::fade(double t) const
 {
 	return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
 int
-PerlinNoiseGenerator::inc(int num)
+Noise::Perlin::inc(int num) const
 {
 	num++;
 	if (repeat > 0) num %= repeat;
@@ -110,7 +114,7 @@ PerlinNoiseGenerator::inc(int num)
 }
 
 double
-PerlinNoiseGenerator::grad(int hash, double x, double y, double z)
+Noise::Perlin::grad(int hash, double x, double y, double z) const
 {
 	switch(hash & 0xF)
 	{
@@ -152,7 +156,63 @@ PerlinNoiseGenerator::grad(int hash, double x, double y, double z)
 }
 
 double
-PerlinNoiseGenerator::lerp(double a, double b, double x)
+Noise::Perlin::lerp(double a, double b, double x) const
 {
 	return a + x * (b - a);
+}
+
+// Noise::Image
+
+Noise::Image::Image(
+	Noise::Perlin perlin, int width, int height, ColorLayout layout,
+	float scale
+) : ::Image(nullptr, width, height, color_layout_byte_size(layout))
+{
+	int channels = color_layout_byte_size(layout);
+	
+	// Manually allocate the buffer.
+	data = new unsigned char[width * height * channels];
+	
+	// Iterate through each pixel
+	for (int ix = 0; ix < width; ix++)
+		for (int iy = 0; iy < height; iy++)
+		{
+			// Convert the indices to [0, scale] range
+			double x_noise = (scale / width) * ix;
+			double y_noise = (scale / height) * iy;
+			double noise = perlin.noise(x_noise, y_noise, 1.0f);
+			
+			// Insert gray into all three channels as a [0, 255] int
+			int pixel_idx =
+				(ix * channels) + (iy * width * channels);
+			int gray = (uint8_t)(255.0f * noise);
+			
+			switch (layout)
+			{
+				case layout_rgba:
+					data[pixel_idx + 3] = (uint8_t)255;
+				case layout_rgb:
+					data[pixel_idx + 2] = (uint8_t)gray;
+				case layout_rg:
+					data[pixel_idx + 1] = (uint8_t)gray;
+				case layout_r:
+					data[pixel_idx] = (uint8_t)gray;
+					break;
+				case layout_depth16:
+				default:
+					std::cout
+					<< "Unsupported ColorLayout type "
+						<< std::hex << layout << "."
+						<< std::endl;
+			}
+		}
+	
+	// Generate a texture on the GPU
+//	noise_tex.load();
+}
+
+Noise::Image::~Image()
+{
+	// Since we manually allocate the buffer, destroy it.
+	delete[] data;
 }

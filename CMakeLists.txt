@@ -53,7 +53,7 @@ set(SOURCES
         src/graphics/primitives/cube.cpp
         src/graphics/primitives/plane.cpp
         src/graphics/model.cpp
-        src/graphics/perlin_noise.cpp
+        src/graphics/noise.cpp
         )
 
 add_executable(landscape ${SOURCES})

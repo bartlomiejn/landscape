@@ -4,8 +4,7 @@
 class RangeIterator
 {
 public:
-	RangeIterator(int value_)
-		: value(value_){}
+	RangeIterator(int value_) : value(value_) {}
 	
 	bool operator!=(RangeIterator const& other) const
 	{
@@ -30,11 +29,9 @@ private:
 class Range
 {
 public:
-	Range(int from_, int to_)
-		: from(from_), to(to_){}
+	Range(int from_, int to_) : from(from_), to(to_) {}
 	
-	Range(int to_)
-		: from(0), to(to_){}
+	Range(int to_) : from(0), to(to_) {}
 	
 	RangeIterator begin() const
 	{

@@ -16,7 +16,7 @@
 #include <graphics/mesh.h>
 #include <graphics/model.h>
 #include <graphics/material.h>
-#include <graphics/perlin_noise.h>
+#include <graphics/noise.h>
 #include <graphics/primitives/cube.h>
 #include <graphics/primitives/plane.h>
 #include <graphics/render_pass/depth_map.h>
@@ -24,7 +24,7 @@
 
 // TODO LIST
 //
-// TODO: (FEATURE) (Terrain) Correctly display the noise texture
+// TODO: (FEATURE) Noise texture generator
 // TODO: (FEATURE) (Terrain) Generate blocky terrain from the noise map
 // TODO: (IMPROVE) Add texture slots to `Material`
 // TODO: (IMPROVE) Extract mouse and keyboard input
@@ -132,8 +132,9 @@ DrawObjectsRenderPass draw_pass(
 
 const int noise_x_sz = 1024;
 const int noise_y_sz = 1024;
-PerlinNoiseGenerator generator;
-Texture noise_tex(noise_x_sz, noise_y_sz, layout_rgba, filter_linear);
+Noise::Image noise_img(
+	Noise::Perlin(), noise_x_sz, noise_y_sz, layout_rgba, 5.0f);
+Texture noise_tex(&noise_img, layout_rgba, filter_linear);
 Material noise_mtl(&noise_tex, &noise_tex, 0.0f);
 Model plane(&plane_mesh, &mtl_shader, &noise_mtl, glm::vec3(0.0f, -2.4f, 0.0f));
 
@@ -238,32 +239,6 @@ debug_shadow_map_pass()
 	glEnable(GL_DEPTH_TEST);
 }
 
-void
-create_terrain()
-{
-	// Iterate through each pixel
-	for (int ix = 0; ix < noise_x_sz; ix++)
-		for (int iy = 0; iy < noise_y_sz; iy++)
-		{
-			// Convert the index to [0, 1] range (not sure if that's
-			// needed)
-			double x_noise = (5.0f / noise_x_sz) * ix;
-			double y_noise = (5.0f / noise_y_sz) * iy;
-			double noise = generator.noise(x_noise, y_noise, 1.0f);
-			
-			// Insert gray into all three channels as a [0, 255] int
-			int pixel_idx = ix * 4 + iy * noise_x_sz * 4;
-			int gray = (uint8_t)(255.0f * noise);
-			noise_tex.data[pixel_idx] = gray;
-			noise_tex.data[pixel_idx + 1] = gray;
-			noise_tex.data[pixel_idx + 2] = gray;
-			noise_tex.data[pixel_idx + 3] = (uint8_t)255;
-		}
-		
-	// Generate a texture on the GPU
-	noise_tex.load();
-}
-
 int
 main(void)
 {
@@ -278,7 +253,7 @@ main(void)
 	
 	// Setup GLFW window
 	GLFWwindow* window = glfwCreateWindow(
-		window_width, window_height, "Landscape", NULL, NULL);
+		window_width, window_height, "Landscape", nullptr, nullptr);
 	if (window == nullptr)
 	{
 		std::cout << "Failed to create GLFW window." << std::endl;
@@ -320,6 +295,7 @@ main(void)
 		cont_diff_tex.load();
 		cont_spec_tex.load();
 		wood_diff_tex.load();
+		noise_tex.load();
 		
 		cube_mesh.load();
 		plane_mesh.load();
@@ -364,8 +340,6 @@ main(void)
 		models.push_back(cube_ptr);
 	}
 	models.push_back(std::make_shared<Model>(plane));
-	
-	create_terrain();
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))

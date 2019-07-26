@@ -8,43 +8,47 @@ Image::Image(const char *filename)
 	img_filename = filename;
 }
 
+Image::Image(unsigned char *data, int width, int height, int channels) :
+	data(data),
+	img_width(width),
+	img_height(height),
+	img_channels(channels),
+	img_filename(nullptr)
+{}
+
 void Image::try_load()
 {
+	if (!img_filename)
+		throw ImageLoadFailure(nullptr);
 	stbi_set_flip_vertically_on_load(true);
-	img_data = stbi_load(
+	data = stbi_load(
 		img_filename, &img_width, &img_height, &img_channels, 0);
-	if (!img_data)
+	if (!data)
 		throw ImageLoadFailure(img_filename);
 }
 
 Image::~Image()
 {
-	// TODO: Fix the bug that crashes the app on quitting here
-	stbi_image_free(img_data);
+	if (img_filename)
+		stbi_image_free(data);
 }
 
 int
-Image::width()
+Image::width() const
 {
 	return img_width;
 }
 
 int
-Image::height()
+Image::height() const
 {
 	return img_height;
 }
 
 int
-Image::channels()
+Image::channels() const
 {
 	return img_channels;
-}
-
-const unsigned char*
-Image::data()
-{
-	return img_data;
 }
 
 ImageLoadFailure::ImageLoadFailure(const char *name)
