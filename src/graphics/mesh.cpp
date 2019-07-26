@@ -29,17 +29,6 @@ Mesh::load()
 }
 
 void
-Mesh::use()
-{
-	glBindVertexArray(vao);
-}
-
-void Mesh::draw()
-{
-	glDrawArrays(GL_TRIANGLES, 0, vertices_count);
-}
-
-void
 Mesh::add_vertex_attrib_array(int index, int size, void *offset)
 {
 	glBindVertexArray(vao);
@@ -48,4 +37,15 @@ Mesh::add_vertex_attrib_array(int index, int size, void *offset)
 		index, size, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_stride,
 		offset);
 	glBindVertexArray(0);
+}
+
+void
+Mesh::use() const
+{
+	glBindVertexArray(vao);
+}
+
+void Mesh::draw() const
+{
+	glDrawArrays(GL_TRIANGLES, 0, vertices_count);
 }

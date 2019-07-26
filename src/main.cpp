@@ -100,7 +100,7 @@ Material wood_mtl(&wood_diff_tex, &wood_diff_tex, 32.0f);
 // Drawables
 
 CubeMesh cube_mesh;
-PlaneMesh plane_mesh;
+PlaneMesh plane_mesh(25.0f, 25.0f, 1.0f);
 
 std::vector<std::shared_ptr<Model>> models;
 std::vector<std::shared_ptr<Model>> cubes;
@@ -130,8 +130,8 @@ DrawObjectsRenderPass draw_pass(
 
 // Terrain
 
-const int noise_x_sz = 256;
-const int noise_y_sz = 256;
+const int noise_x_sz = 1024;
+const int noise_y_sz = 1024;
 PerlinNoiseGenerator generator;
 Texture noise_tex(noise_x_sz, noise_y_sz, layout_rgba, filter_linear);
 Material noise_mtl(&noise_tex, &noise_tex, 0.0f);
@@ -247,21 +247,16 @@ create_terrain()
 		{
 			// Convert the index to [0, 1] range (not sure if that's
 			// needed)
-			double x_noise = (1.0f / noise_x_sz) * ix;
-			double y_noise = (1.0f / noise_y_sz) * iy;
+			double x_noise = (5.0f / noise_x_sz) * ix;
+			double y_noise = (5.0f / noise_y_sz) * iy;
 			double noise = generator.noise(x_noise, y_noise, 1.0f);
 			
-			// Convert to a [0, 255] integer and insert into texture
-			noise_tex.data[ix + iy*ix] = (uint8_t)(255.0f * noise);
-			
-			// Insert gray into all three channels
-			int pixel_idx = ix*3 + iy*ix*3;
-			noise_tex.data[pixel_idx] = (uint8_t)(255.0f * noise);
-			noise_tex.data[pixel_idx + 1] =
-				(uint8_t)(255.0f * noise);
-			noise_tex.data[pixel_idx + 2] =
-				(uint8_t)(255.0f * noise);
-			// A = 1
+			// Insert gray into all three channels as a [0, 255] int
+			int pixel_idx = ix * 4 + iy * noise_x_sz * 4;
+			int gray = (uint8_t)(255.0f * noise);
+			noise_tex.data[pixel_idx] = gray;
+			noise_tex.data[pixel_idx + 1] = gray;
+			noise_tex.data[pixel_idx + 2] = gray;
 			noise_tex.data[pixel_idx + 3] = (uint8_t)255;
 		}
 		
