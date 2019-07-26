@@ -27,6 +27,31 @@ void Image::try_load()
 		throw ImageLoadFailure(img_filename);
 }
 
+unsigned char Image::try_sample(
+	int x, int y, int channel, SamplingType sampling
+) const {
+	if (channel >= channel_count())
+		throw InvalidChannel(channel);
+	if (x > width() || x < 0)
+		switch (sampling)
+		{
+			case sample_clamp:
+			default:
+				if (x < 0) x = 0;
+				else 	   x = width();
+		}
+	if (y > height() || y < 0)
+		switch (sampling)
+		{
+			case sample_clamp:
+			default:
+				if (y < 0) y = 0;
+				else 	   y = height();
+		}
+	return data[
+		y * height() * channel_count() + x * channel_count() + channel];
+}
+
 Image::~Image()
 {
 	if (img_filename)
@@ -46,12 +71,7 @@ Image::height() const
 }
 
 int
-Image::channels() const
+Image::channel_count() const
 {
 	return img_channels;
-}
-
-ImageLoadFailure::ImageLoadFailure(const char *name)
-{
-	filename = name;
 }

@@ -61,7 +61,7 @@ float mouse_last_x = window_width / 2;
 float mouse_last_y = window_height / 2;
 float mouse_sensitivity = 0.05f;
 
-float movement_speed = 2.5f;
+float movement_speed = 5.0f;
 
 Camera camera(
 	glm::vec3(0.0f, 0.0f, 3.0f), 	// Position
@@ -79,16 +79,13 @@ SpotLight shadow_map_spot_light(
 	glm::cos(glm::radians(12.5f)),	// Inner cut off
 	glm::cos(glm::radians(17.5f))); // Outer cut off
 	
-Image cont_diff_img("assets/container2_diff.png");
-Image cont_spec_img("assets/container2_spec.png");
-Image wood_diff_img("assets/wood_diff.png");
+// Materials
 
-Texture cont_diff_tex(&cont_diff_img, layout_rgba, filter_linear);
-Texture cont_spec_tex(&cont_spec_img, layout_rgba, filter_linear);
-Texture wood_diff_tex(&wood_diff_img, layout_rgba, filter_linear);
+Image grass("assets/grass-512.jpg");
+Texture grass_tex(&grass, layout_rgb, filter_linear);
+Material grass_mtl(&grass_tex, &grass_tex, 32.0f);
 
-Material cont_mtl(&cont_diff_tex, &cont_spec_tex, 32.0f);
-Material wood_mtl(&wood_diff_tex, &wood_diff_tex, 32.0f);
+// Shaders
 
 MaterialShader mtl_shader("glsl/vertex.glsl");
 Shader depth_map_shader(
@@ -99,10 +96,10 @@ Shader white_shader("glsl/vertex.glsl", "glsl/white.glsl");
 
 // Depth map
 
-Texture depth_map_tex(
+Texture depthmap_tex(
 	nullptr, shadow_map_width, shadow_map_height, layout_depth16,
 	filter_nearest);
-Framebuffer depth_map_fb(depth_map_tex);
+Framebuffer depth_map_fb(depthmap_tex);
 DepthMapRenderPass depth_map_pass(
 	shadow_map_spot_light, depth_map_shader, depth_map_fb, shadow_map_width,
 	shadow_map_height);
@@ -114,9 +111,6 @@ DrawObjectsRenderPass draw_pass(
 	shadow_map_spot_light,
 	mtl_shader,
 	camera,
-	cont_diff_tex,
-	cont_spec_tex,
-	wood_diff_tex,
 	depth_map_pass,
 	window_width,
 	window_height);
@@ -128,16 +122,17 @@ std::vector<std::shared_ptr<Model>> cubes;
 
 // Terrain
 
-int chunk_sz = 16;
+int chunk_sz = 48;
+float height_offset = -114.5f;
 Noise::Image heightmap(
 	Noise::Perlin(), chunk_sz, chunk_sz, layout_rgb, 0.08f);
 Texture      heightmap_tex(&heightmap, layout_rgb, filter_nearest);
 Material     heightmap_mtl(&heightmap_tex, &heightmap_tex, 0.0f);
 std::vector<std::shared_ptr<Model>> terrain_blocks;
 
-// Plane with the heightmap (Illustrative only for now)
+// Heightmap plane
 
-PlaneMesh    plane_mesh(16.0f, 16.0f, 1.0f);
+PlaneMesh    plane_mesh((float)chunk_sz, (float)chunk_sz, 1.0f);
 Model        plane(
 	&plane_mesh, &mtl_shader, &heightmap_mtl, glm::vec3(-0.5f, -3.0f, -0.5f));
 
@@ -234,7 +229,7 @@ debug_shadow_map_pass()
 	}
 	glBindVertexArray(debug_quad_vao);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, depth_map_tex.id());
+	glBindTexture(GL_TEXTURE_2D, depthmap_tex.id());
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	
 	glBindVertexArray(0);
@@ -290,14 +285,10 @@ main(void)
 		depth_debug_shader.try_create_and_link();
 		white_shader.try_create_and_link();
 		
-		cont_diff_img.try_load();
-		cont_spec_img.try_load();
-		wood_diff_img.try_load();
+		grass.try_load();
 		
-		depth_map_tex.load();
-		cont_diff_tex.load();
-		cont_spec_tex.load();
-		wood_diff_tex.load();
+		grass_tex.load();
+		depthmap_tex.load();
 		heightmap_tex.load();
 		
 		cube_mesh.load();
@@ -338,16 +329,16 @@ main(void)
 	{
 		for (int iz = 0; iz < chunk_sz; iz++)
 		{
-			float y = (float)(heightmap.data[
-				iz * chunk_sz * heightmap.channels()
-				+ ix * heightmap.channels()]);
+			// Sample the heightmap at (ix, iy) taking in mind the
+			// channel count
+			float y = (float)(heightmap.try_sample(ix, iz, 0));
 			glm::vec3 translation(
 				(float)ix - (float)chunk_sz / 2.0f,
-				y - 119.5f,
+				y + height_offset,
 				(float)iz - (float)chunk_sz / 2.0f);
 			
 			auto cube_ptr = std::make_shared<Model>(
-				&cube_mesh, &mtl_shader, &cont_mtl,
+				&cube_mesh, &mtl_shader, &grass_mtl,
 				translation);
 			
 			terrain_blocks.push_back(cube_ptr);
@@ -365,18 +356,6 @@ main(void)
 		last_frame = current_frame;
 		
 		handle_keyboard_input(window);
-		
-		// Update cube state
-//		for (unsigned int i = 0; i < 10; i++)
-//		{
-//			float angle = 20.0f * i;
-//			float rotation =
-//				(float)glfwGetTime() * glm::radians(50.0f)
-//				+ glm::radians(angle);
-//			cubes[i]->rotation_axis =
-//				glm::vec3(0.5f, 1.0f, 0.0f);
-//			cubes[i]->rotation_angle_rad = rotation;
-//		}
 		
 		depth_map_pass.draw(models);
 		draw_pass.draw(models);

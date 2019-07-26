@@ -109,3 +109,7 @@ configure_file(
         ${PROJECT_SOURCE_DIR}/assets/wood_diff.png
         ${CMAKE_BINARY_DIR}/output/assets/wood_diff.png
         COPYONLY)
+configure_file(
+        ${PROJECT_SOURCE_DIR}/assets/grass-512.jpg
+        ${CMAKE_BINARY_DIR}/output/assets/grass-512.jpg
+        COPYONLY)

@@ -19,9 +19,6 @@ public:
 	SpotLight &light;
 	MaterialShader &shader;
 	Camera &camera;
-	Texture &cont_diff_tex;
-	Texture &cont_spec_tex;
-	Texture &wood_diff_tex;
 	DepthMapRenderPass &depth_pass;
 	unsigned int width;
 	unsigned int height;
@@ -32,9 +29,6 @@ public:
 		SpotLight &light,
 		MaterialShader &shader,
 		Camera &camera,
-		Texture &cont_diff_tex,
-		Texture &cont_spec_tex,
-		Texture &wood_diff_tex,
 		DepthMapRenderPass &depth_pass,
 		unsigned int width,
 		unsigned int height
@@ -42,9 +36,6 @@ public:
 		light(light),
 		shader(shader),
 		camera(camera),
-		cont_diff_tex(cont_diff_tex),
-		cont_spec_tex(cont_spec_tex),
-		wood_diff_tex(wood_diff_tex),
 		depth_pass(depth_pass),
 		width(width),
 		height(height)

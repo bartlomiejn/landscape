@@ -212,6 +212,8 @@ Noise::Image::Image(
 
 Noise::Image::~Image()
 {
+	::Image::~Image();
 	// Since we manually allocate the buffer, destroy it.
 	delete[] data;
+	
 }

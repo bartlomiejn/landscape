@@ -6,8 +6,14 @@
 
 namespace Noise
 {
-	/// A 3D Perlin noise generator.
-	class Perlin
+	/// An abstract 3D noise generator class.
+	class Generator
+	{
+		virtual double noise(double x, double y, double z) const = 0;
+	};
+	
+	/// A Perlin noise generator.
+	class Perlin : public Generator
 	{
 	public:
 		/// Creates an instance of a Perlin noise generator.
@@ -28,6 +34,32 @@ namespace Noise
 		int inc(int num) const;
 		double grad(int hash, double x, double y, double z) const;
 		double lerp(double a, double b, double x) const;
+	};
+	
+	/// A composite noise generator, generating noise using output composed
+	/// from its components.
+	template <class GenPtrArray>
+	class Composite : public Generator
+	{
+	public:
+		/// Creates a composite noise generator.
+		/// \param generators Container of pointers to Generator
+		/// instances.
+		Composite(GenPtrArray generators): generators(generators) {};
+		
+		/// Outputs a pseudorandom double in the range of [0, 1].
+		///
+		/// \param x X coordinate
+		/// \param y Y coordinate
+		/// \param z Z coordinate
+		/// \return Pseudorandom value in the range of [0, 1]
+		double noise(double x, double y, double z) const
+		{
+			int size = generators.size();
+			
+		};
+	private:
+		GenPtrArray generators;
 	};
 	
 	/// 2D noise encapsulated in an Image

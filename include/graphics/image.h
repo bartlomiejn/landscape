@@ -1,6 +1,12 @@
 #ifndef LANDSCAPE_IMAGE_H
 #define LANDSCAPE_IMAGE_H
 
+/// Sampling type enumeration
+enum SamplingType
+{
+	sample_clamp, ///< Clamp to the image bounds.
+};
+
 class Image
 {
 public:
@@ -26,6 +32,17 @@ public:
 	/// exception.
 	void try_load();
 	
+	/// Samples the image at (x, y, channel). Throws an error on an invalid
+	/// channel number.
+	/// \param x X coordinate to sample.
+	/// \param y Y coordinate to sample.
+	/// \param channel Color channel to sample.
+	/// \param sampling Sampling type to use.
+	/// \return Byte at provided (x, y, channel).
+	unsigned char try_sample(
+		int x, int y, int channel,
+		SamplingType sampling = sample_clamp) const;
+	
 	/// Returns the width of the image in pixels.
 	int width() const;
 	
@@ -33,7 +50,7 @@ public:
 	int height() const;
 	
 	/// Returns the channel count for each pixel.
-	int channels() const;
+	int channel_count() const;
 private:
 	const char *img_filename;
 	int img_width;
@@ -43,8 +60,14 @@ private:
 
 class ImageLoadFailure {
 public:
-	ImageLoadFailure(const char *filename);
+	ImageLoadFailure(const char *filename) : filename(filename) {};
 	const char *filename;
+};
+
+class InvalidChannel {
+public:
+	InvalidChannel(const int channel) : channel(channel) {};
+	const int channel;
 };
 
 #endif //LANDSCAPE_IMAGE_H
