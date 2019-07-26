@@ -57,7 +57,7 @@ public:
 		glEnable(GL_DEPTH_TEST);
 		
 		glm::mat4 light_proj = glm::ortho(
-			-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+			-20.0f, 20.0f, -20.0f, 20.0f, near_plane, far_plane);
 		glm::mat4 light_view = glm::lookAt(
 			light.position,
 			light.direction,
