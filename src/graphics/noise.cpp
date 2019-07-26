@@ -99,7 +99,7 @@ Noise::Perlin::noise(double x, double y, double z) const
 double
 Noise::Perlin::octave_noise(
 	double x, double y, double z, int octaves, double persistence
-){
+) const {
 	double total = 0;
 	double frequency = 1;
 	double amplitude = 1;
@@ -186,7 +186,7 @@ Noise::Perlin::lerp(double a, double b, double x) const
 // Noise::Image
 
 Noise::Image::Image(
-	Noise::Perlin perlin, int width, int height, ColorLayout layout,
+	Noise::Generator &generator, int width, int height, ColorLayout layout,
 	float frequency
 ) : ::Image(nullptr, width, height, color_layout_byte_size(layout))
 {
@@ -202,7 +202,7 @@ Noise::Image::Image(
 			// Convert the indices to [0, scale] range.
 			double x_noise = (frequency / width) * ix;
 			double y_noise = (frequency / height) * iy;
-			double noise = perlin.noise(x_noise, y_noise, 1.0f);
+			double noise = generator.noise(x_noise, y_noise, 1.0f);
 			
 			// Convert to a [0, 255] int.
 			int pixel_idx =
@@ -233,8 +233,8 @@ Noise::Image::Image(
 }
 
 Noise::Image::Image(
-	Noise::Perlin perlin, int width, int height, ColorLayout layout,
-	float frequency, int octaves, double persistence
+	Noise::OctavedGenerator &generator, int width, int height,
+	ColorLayout layout, float frequency, int octaves, double persistence
 ) : ::Image(nullptr, width, height, color_layout_byte_size(layout))
 {
 	int channels = color_layout_byte_size(layout);
@@ -249,7 +249,7 @@ Noise::Image::Image(
 			// Convert the indices to [0, scale] range.
 			double xn = (frequency / width) * ix;
 			double yn = (frequency / height) * iy;
-			double noise = perlin.octave_noise(
+			double noise = generator.octave_noise(
 				xn, yn, 1.0f, octaves, persistence);
 			int gray = (uint8_t)(255.0f * noise);
 			

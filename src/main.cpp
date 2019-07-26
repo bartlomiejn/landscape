@@ -24,6 +24,7 @@
 
 // TODO LIST
 //
+// TODO: (PERFORMANCE) Instanced rendering of blocks
 // TODO: (FEATURE) (Terrain) Generate block terrain from a 3d noise map
 // TODO: (IMPROVE) Add texture slots to `Material`
 // TODO: (IMPROVE) Extract mouse and keyboard input
@@ -123,12 +124,21 @@ std::vector<std::shared_ptr<Model>> cubes;
 
 // Terrain
 
-int chunk_sz = 48;
+const int chunk_sz = 24;
 float height_offset = -114.5f;
-Noise::Image heightmap(
-	Noise::Perlin(), chunk_sz, chunk_sz, layout_rgb, 3.0f, 6, 0.6f);
-Texture      heightmap_tex(&heightmap, layout_rgb, filter_nearest);
-Material     heightmap_mtl(&heightmap_tex, &heightmap_tex, 0.0f);
+Noise::Perlin perlin;
+
+Noise::Image  heightmap(perlin, chunk_sz, chunk_sz, layout_rgb, 4.0f, 6, 0.4f);
+Texture       heightmap_tex(&heightmap, layout_rgb, filter_nearest);
+Material      heightmap_mtl(&heightmap_tex, &heightmap_tex, 0.0f);
+
+Noise::Volume<chunk_sz, chunk_sz, chunk_sz> volume(
+	perlin,	// Noise generator
+	4.0f, 	// Initial frequency
+	6, 	// Octave count
+	0.4f, 	// Persistence
+	0.4f);	// Threshold value for noise
+
 std::vector<std::shared_ptr<Model>> terrain_blocks;
 
 // Heightmap plane
@@ -241,7 +251,6 @@ debug_shadow_map_pass()
 void update_light_position()
 {
 	sunlight.position = sunlight_offset + camera.position();
-	// TODO: Is this a direction vector? Or is the offset between position used in light calculation?
 	sunlight.direction = camera.position();
 }
 
@@ -335,26 +344,26 @@ main(void)
 	
 	// Prepare terrain blocks
 	for (int ix = 0; ix < chunk_sz; ix++)
+	for (int iy = 0; iy < chunk_sz; iy++)
+	for (int iz = 0; iz < chunk_sz; iz++)
 	{
-		for (int iz = 0; iz < chunk_sz; iz++)
+		if (volume.try_sample(ix, iy, iz) != 0)
 		{
-			float y = std::ceil((float)(heightmap.try_sample(ix, iz, 0)) / 6.0);
-			
 			glm::vec3 translation(
 				(float)ix - (float)chunk_sz / 2.0f,
-				y,
+				(float)iy - (float)chunk_sz / 2.0f,
 				(float)iz - (float)chunk_sz / 2.0f);
-
+			
 			auto cube_ptr = std::make_shared<Model>(
 				&cube_mesh, &mtl_shader, &ground_mtl,
 				translation);
-
+			
 			terrain_blocks.push_back(cube_ptr);
 			models.push_back(cube_ptr);
 		}
 	}
 
-	models.push_back(std::make_shared<Model>(plane));
+//	models.push_back(std::make_shared<Model>(plane));
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
