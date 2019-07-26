@@ -64,20 +64,21 @@ float mouse_sensitivity = 0.05f;
 float movement_speed = 5.0f;
 
 Camera camera(
-	glm::vec3(0.0f, 0.0f, 3.0f), 	// Position
+	glm::vec3(0.0f, 6.0f, 3.0f), 	// Position
 	glm::vec3(0.0f, 1.0f, 0.0f), 	// World up vector
 	0.0f, 				// Yaw
 	0.0f, 				// Pitch
 	45.0f); 			// FOV
-	
-SpotLight shadow_map_spot_light(
-	glm::vec3(4.0f, 10.0f, 2.0f),	// Position
-	glm::vec3(0.0f, 0.0f, 0.1f),	// Direction
-	glm::vec3(0.3f, 0.3f, 0.3f), 	// Ambient
-	glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
-	glm::vec3(1.0f, 1.0f, 1.0f),	// Specular
-	glm::cos(glm::radians(12.5f)),	// Inner cut off
-	glm::cos(glm::radians(17.5f))); // Outer cut off
+
+glm::vec3 sunlight_offset = glm::vec3(8.0f, 20.0f, 4.0f);
+SpotLight sunlight(
+	sunlight_offset + camera.position(), // Position
+	camera.position(),	     	     // Direction
+	glm::vec3(0.3f, 0.3f, 0.3f), 	     // Ambient
+	glm::vec3(0.5f, 0.5f, 0.5f), 	     // Diffuse
+	glm::vec3(1.0f, 1.0f, 1.0f),	     // Specular
+	glm::cos(glm::radians(12.5f)),	     // Inner cut off
+	glm::cos(glm::radians(17.5f)));      // Outer cut off
 	
 // Materials
 
@@ -102,14 +103,14 @@ Texture depthmap_tex(
 	filter_nearest);
 Framebuffer depth_map_fb(depthmap_tex);
 DepthMapRenderPass depth_map_pass(
-	shadow_map_spot_light, depth_map_shader, depth_map_fb, shadow_map_width,
+	sunlight, depth_map_shader, depth_map_fb, shadow_map_width,
 	shadow_map_height);
 
 // Draw objects
 
 std::vector<std::shared_ptr<Model>> models;
 DrawObjectsRenderPass draw_pass(
-	shadow_map_spot_light,
+	sunlight,
 	mtl_shader,
 	camera,
 	depth_map_pass,
@@ -238,6 +239,13 @@ debug_shadow_map_pass()
 	glEnable(GL_DEPTH_TEST);
 }
 
+void update_light_position()
+{
+	sunlight.position = sunlight_offset + camera.position();
+	// TODO: Is this a direction vector? Or is the offset between position used in light calculation?
+	sunlight.direction = camera.position();
+}
+
 int
 main(void)
 {
@@ -358,6 +366,8 @@ main(void)
 		last_frame = current_frame;
 		
 		handle_keyboard_input(window);
+		
+		update_light_position();
 		
 		depth_map_pass.draw(models);
 		draw_pass.draw(models);
