@@ -82,8 +82,9 @@ SpotLight shadow_map_spot_light(
 // Materials
 
 Image grass("assets/grass-512.jpg");
-Texture grass_tex(&grass, layout_rgb, filter_linear);
-Material grass_mtl(&grass_tex, &grass_tex, 32.0f);
+Image ground_d("assets/blocks/ground_diff.jpg");
+Texture ground_d_tex(&ground_d, layout_rgb, filter_linear);
+Material ground_mtl(&ground_d_tex, &ground_d_tex, 128.0f);
 
 // Shaders
 
@@ -286,8 +287,9 @@ main(void)
 		white_shader.try_create_and_link();
 		
 		grass.try_load();
+		ground_d.try_load();
 		
-		grass_tex.load();
+		ground_d_tex.load();
 		depthmap_tex.load();
 		heightmap_tex.load();
 		
@@ -338,7 +340,7 @@ main(void)
 				(float)iz - (float)chunk_sz / 2.0f);
 			
 			auto cube_ptr = std::make_shared<Model>(
-				&cube_mesh, &mtl_shader, &grass_mtl,
+				&cube_mesh, &mtl_shader, &ground_mtl,
 				translation);
 			
 			terrain_blocks.push_back(cube_ptr);

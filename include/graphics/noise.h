@@ -73,11 +73,10 @@ namespace Noise
 		/// \param channels Channel count - will fill all channels with
 		/// a gray color, unless its the fourth channel, which will be
 		/// filled with 255s.
-		/// \param scale Inverted scale of the noise - e.g. 2.0f will
-		/// make it appear more zoomed out than 1.0f.
+		/// \param octave Noise octave.
 		Image(
-			Perlin perlin, int width, int height, ColorLayout layout,
-			float scale = 5.0f);
+			Perlin perlin, int width, int height,
+			ColorLayout layout, float octave = 5.0f);
 		
 		/// Destroys the Image instance.
 		~Image();

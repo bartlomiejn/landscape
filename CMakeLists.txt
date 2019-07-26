@@ -98,18 +98,10 @@ configure_file(
 
 # Image assets
 configure_file(
-        ${PROJECT_SOURCE_DIR}/assets/container2_diff.png
-        ${CMAKE_BINARY_DIR}/output/assets/container2_diff.png
+        ${PROJECT_SOURCE_DIR}/assets/blocks/ground_diff.jpg
+        ${CMAKE_BINARY_DIR}/output/assets/blocks/ground_diff.jpg
         COPYONLY)
 configure_file(
-        ${PROJECT_SOURCE_DIR}/assets/container2_spec.png
-        ${CMAKE_BINARY_DIR}/output/assets/container2_spec.png
-        COPYONLY)
-configure_file(
-        ${PROJECT_SOURCE_DIR}/assets/wood_diff.png
-        ${CMAKE_BINARY_DIR}/output/assets/wood_diff.png
-        COPYONLY)
-configure_file(
-        ${PROJECT_SOURCE_DIR}/assets/grass-512.jpg
-        ${CMAKE_BINARY_DIR}/output/assets/grass-512.jpg
+        ${PROJECT_SOURCE_DIR}/assets/blocks/ground_spec.jpg
+        ${CMAKE_BINARY_DIR}/output/assets/blocks/ground_spec.jpg
         COPYONLY)

@@ -140,7 +140,7 @@ vec3 dir_light_contribution(DirLight light, vec3 normal, vec3 view_dir)
 		* light.diffuse;
 
 	// Specular
-	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
+	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), material.shininess);
 	vec3 specular =
 		vec3(texture(material.specular, tex_coords))
 		* spec
@@ -171,7 +171,7 @@ vec3 pt_light_contribution(
 		* attenuation;
 
 	// Specular
-	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
+	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), material.shininess);
 	vec3 specular = vec3(texture(material.specular, tex_coords))
 		* spec
 		* light.specular
@@ -218,7 +218,7 @@ vec3 spot_light_contribution(
 //		* intensity;
 
 	// Specular
-	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
+	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), material.shininess);
 	vec3 specular = vec3(texture(material.specular, tex_coords))
 		* spec
 		* light.specular

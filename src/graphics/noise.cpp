@@ -165,7 +165,7 @@ Noise::Perlin::lerp(double a, double b, double x) const
 
 Noise::Image::Image(
 	Noise::Perlin perlin, int width, int height, ColorLayout layout,
-	float scale
+	float octave
 ) : ::Image(nullptr, width, height, color_layout_byte_size(layout))
 {
 	int channels = color_layout_byte_size(layout);
@@ -178,8 +178,8 @@ Noise::Image::Image(
 		for (int iy = 0; iy < height; iy++)
 		{
 			// Convert the indices to [0, scale] range.
-			double x_noise = (scale / width) * ix;
-			double y_noise = (scale / height) * iy;
+			double x_noise = (octave / width) * ix;
+			double y_noise = (octave / height) * iy;
 			double noise = perlin.noise(x_noise, y_noise, 1.0f);
 			
 			// Convert to a [0, 255] int.
