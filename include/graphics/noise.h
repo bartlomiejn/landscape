@@ -110,8 +110,8 @@ namespace Noise
 			double persistence, double threshold = 0.5f
 		){
 			for (int ix = 0; ix < x_sz; ix++)
-				for (int iy = 0; iy < y_sz; iy++)
-					for (int iz = 0; iz < z_sz; iz++)
+			for (int iy = 0; iy < y_sz; iy++)
+			for (int iz = 0; iz < z_sz; iz++)
 			{
 				// Convert the indices to [0, scale] range.
 				double xi = (frequency / x_sz) * ix;
@@ -121,7 +121,7 @@ namespace Noise
 					xi, yi, zi, octaves, persistence);
  
 				// Threshold the output
-				set(ix, iy, iz, (noise > 0.5f)
+				set(ix, iy, iz, (noise > threshold)
 					? (unsigned char)0x1
 					: (unsigned char)0x0);
 			}

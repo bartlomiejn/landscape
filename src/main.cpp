@@ -25,7 +25,8 @@
 // TODO LIST
 //
 // TODO: (PERFORMANCE) Instanced rendering of blocks
-// TODO: (FEATURE) (Terrain) Generate block terrain from a 3d noise map
+// TODO: (BUG) Shading is based on a point light, but shadow map is directional
+// TODO: (FEATURE) GUI
 // TODO: (IMPROVE) Add texture slots to `Material`
 // TODO: (IMPROVE) Extract mouse and keyboard input
 // TODO: (IMPROVE) Extract depth map debug pass
@@ -33,7 +34,6 @@
 // TODO: (IMPROVE) Convert C pointers to shared pointers
 // TODO: (IMPROVE) Find a way to use templates and still have header/implementation separation.
 // TODO: (IMPROVE) Create platform-agnostic abstract types
-// TODO: (BUG) Shading is based on a point light, but shadow map is directional
 // TODO: (BUG) Viewport should be scaled by 2x on Retina-like displays
 
 const unsigned int window_width = 1280;
@@ -132,12 +132,12 @@ Noise::Image  heightmap(perlin, chunk_sz, chunk_sz, layout_rgb, 4.0f, 6, 0.4f);
 Texture       heightmap_tex(&heightmap, layout_rgb, filter_nearest);
 Material      heightmap_mtl(&heightmap_tex, &heightmap_tex, 0.0f);
 
-Noise::Volume<chunk_sz, chunk_sz, chunk_sz> volume(
+Noise::Volume<chunk_sz, chunk_sz, chunk_sz> chunk(
 	perlin,	// Noise generator
 	4.0f, 	// Initial frequency
 	6, 	// Octave count
 	0.4f, 	// Persistence
-	0.4f);	// Threshold value for noise
+	0.45f);	// Threshold value for noise
 
 std::vector<std::shared_ptr<Model>> terrain_blocks;
 
@@ -347,7 +347,7 @@ main(void)
 	for (int iy = 0; iy < chunk_sz; iy++)
 	for (int iz = 0; iz < chunk_sz; iz++)
 	{
-		if (volume.try_sample(ix, iy, iz) != 0)
+		if (chunk.try_sample(ix, iy, iz) != 0)
 		{
 			glm::vec3 translation(
 				(float)ix - (float)chunk_sz / 2.0f,
@@ -362,8 +362,6 @@ main(void)
 			models.push_back(cube_ptr);
 		}
 	}
-
-//	models.push_back(std::make_shared<Model>(plane));
 	
 	// Perform rendering loop
 	while (!glfwWindowShouldClose(window))
@@ -378,7 +376,6 @@ main(void)
 		
 		depth_map_pass.draw(models);
 		draw_pass.draw(models);
-//		debug_shadow_map_pass();
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
