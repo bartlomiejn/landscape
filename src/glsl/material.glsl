@@ -116,8 +116,10 @@ float is_in_shadow(vec4 frag_pos_light_space)
 		// Sample the disk
 		vec2 offset = poisson_disk[index] / 700.0;
 
+		vec2 sample_pos = clamp(proj_coords.xy + offset, vec2(0.001, 0.001), vec2(0.999, 0.999));
+
 		// Get the closest fragment depth from the depth buffer
-		float closest_depth = texture(shadow_map, proj_coords.xy + offset).r;
+		float closest_depth = texture(shadow_map, sample_pos).r;
 		if (current_depth > closest_depth)
 			visibility += 0.25;
 	}
