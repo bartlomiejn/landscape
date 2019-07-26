@@ -77,25 +77,7 @@ public:
 			glm::radians(camera.fov()),
 			(float)width / (float)height,
 			0.1f,
-			100.0f);
-		
-//		// Use the shader and configure its uniforms
-//		shader.use();
-//		shader.set_uniform("view", view);
-//		shader.set_uniform("projection", projection);
-//		shader.set_uniform(
-//			"light_space_matrix",
-//			depth_pass.light_view_projection());
-//		shader.set_uniform("view_pos", camera.position());
-//		shader.set_spot_light(light);
-//		shader.set_uniform("material.diffuse", 0);
-//		shader.set_uniform("material.specular", 1);
-//		shader.set_uniform("material.shininess", 32.0f);
-//		shader.set_uniform("shadow_map", 2);
-//
-//		cont_diff_tex.use(GL_TEXTURE0);
-//		cont_spec_tex.use(GL_TEXTURE1);
-//		depth_pass.depth_texture().use(GL_TEXTURE2);
+			255.0f);
 		
 		DrawObjectsContext ctx(
 			view,
@@ -110,10 +92,6 @@ public:
 		
 		for (const auto &model : models)
 			model->draw(ctx);
-		
-//		wood_diff_tex.use(GL_TEXTURE0);
-//		wood_diff_tex.use(GL_TEXTURE1); // Use as specular as well
-//		plane.draw();
 	}
 };
 

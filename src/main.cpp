@@ -71,7 +71,7 @@ Camera camera(
 	45.0f); 			// FOV
 	
 SpotLight shadow_map_spot_light(
-	glm::vec3(-4.0f, 10.0f, -2.0f),	// Position
+	glm::vec3(4.0f, 10.0f, 2.0f),	// Position
 	glm::vec3(0.0f, 0.0f, 0.1f),	// Direction
 	glm::vec3(0.3f, 0.3f, 0.3f), 	// Ambient
 	glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
@@ -79,13 +79,6 @@ SpotLight shadow_map_spot_light(
 	glm::cos(glm::radians(12.5f)),	// Inner cut off
 	glm::cos(glm::radians(17.5f))); // Outer cut off
 	
-MaterialShader mtl_shader("glsl/vertex.glsl");
-Shader depth_map_shader(
-	"glsl/shadowmap_vertex.glsl", "glsl/shadowmap_frag.glsl");
-Shader depth_debug_shader(
-	"glsl/shadowmap_vertex_quad.glsl", "glsl/shadowmap_frag_quad.glsl");
-Shader white_shader("glsl/vertex.glsl", "glsl/white.glsl");
-
 Image cont_diff_img("assets/container2_diff.png");
 Image cont_spec_img("assets/container2_spec.png");
 Image wood_diff_img("assets/wood_diff.png");
@@ -97,13 +90,12 @@ Texture wood_diff_tex(&wood_diff_img, layout_rgba, filter_linear);
 Material cont_mtl(&cont_diff_tex, &cont_spec_tex, 32.0f);
 Material wood_mtl(&wood_diff_tex, &wood_diff_tex, 32.0f);
 
-// Drawables
-
-CubeMesh cube_mesh;
-PlaneMesh plane_mesh(25.0f, 25.0f, 1.0f);
-
-std::vector<std::shared_ptr<Model>> models;
-std::vector<std::shared_ptr<Model>> cubes;
+MaterialShader mtl_shader("glsl/vertex.glsl");
+Shader depth_map_shader(
+	"glsl/shadowmap_vertex.glsl", "glsl/shadowmap_frag.glsl");
+Shader depth_debug_shader(
+	"glsl/shadowmap_vertex_quad.glsl", "glsl/shadowmap_frag_quad.glsl");
+Shader white_shader("glsl/vertex.glsl", "glsl/white.glsl");
 
 // Depth map
 
@@ -117,6 +109,7 @@ DepthMapRenderPass depth_map_pass(
 
 // Draw objects
 
+std::vector<std::shared_ptr<Model>> models;
 DrawObjectsRenderPass draw_pass(
 	shadow_map_spot_light,
 	mtl_shader,
@@ -128,15 +121,25 @@ DrawObjectsRenderPass draw_pass(
 	window_width,
 	window_height);
 
+// Cubes
+
+CubeMesh cube_mesh(1.0f, 1.0f, 1.0f);
+std::vector<std::shared_ptr<Model>> cubes;
+
 // Terrain
 
-const int noise_x_sz = 1024;
-const int noise_y_sz = 1024;
-Noise::Image noise_img(
-	Noise::Perlin(), noise_x_sz, noise_y_sz, layout_rgb, 5.0f);
-Texture noise_tex(&noise_img, layout_rgb, filter_linear);
-Material noise_mtl(&noise_tex, &noise_tex, 0.0f);
-Model plane(&plane_mesh, &mtl_shader, &noise_mtl, glm::vec3(0.0f, -2.4f, 0.0f));
+int chunk_sz = 16;
+Noise::Image heightmap(
+	Noise::Perlin(), chunk_sz, chunk_sz, layout_rgb, 0.08f);
+Texture      heightmap_tex(&heightmap, layout_rgb, filter_nearest);
+Material     heightmap_mtl(&heightmap_tex, &heightmap_tex, 0.0f);
+std::vector<std::shared_ptr<Model>> terrain_blocks;
+
+// Plane with the heightmap (Illustrative only for now)
+
+PlaneMesh    plane_mesh(16.0f, 16.0f, 1.0f);
+Model        plane(
+	&plane_mesh, &mtl_shader, &heightmap_mtl, glm::vec3(-0.5f, -3.0f, -0.5f));
 
 void
 on_fb_resize(GLFWwindow *window, int width, int height)
@@ -295,7 +298,7 @@ main(void)
 		cont_diff_tex.load();
 		cont_spec_tex.load();
 		wood_diff_tex.load();
-		noise_tex.load();
+		heightmap_tex.load();
 		
 		cube_mesh.load();
 		plane_mesh.load();
@@ -330,15 +333,28 @@ main(void)
 		return -1;
 	}
 	
-	// Prepare drawables
-	for (int i = 0; i < 10; i++)
+	// Prepare terrain blocks
+	for (int ix = 0; ix < chunk_sz; ix++)
 	{
-		Model cube(
-			&cube_mesh, &mtl_shader, &cont_mtl, cube_positions[i]);
-		std::shared_ptr<Model> cube_ptr = std::make_shared<Model>(cube);
-		cubes.push_back(cube_ptr);
-		models.push_back(cube_ptr);
+		for (int iz = 0; iz < chunk_sz; iz++)
+		{
+			float y = (float)(heightmap.data[
+				iz * chunk_sz * heightmap.channels()
+				+ ix * heightmap.channels()]);
+			glm::vec3 translation(
+				(float)ix - (float)chunk_sz / 2.0f,
+				y - 119.5f,
+				(float)iz - (float)chunk_sz / 2.0f);
+			
+			auto cube_ptr = std::make_shared<Model>(
+				&cube_mesh, &mtl_shader, &cont_mtl,
+				translation);
+			
+			terrain_blocks.push_back(cube_ptr);
+			models.push_back(cube_ptr);
+		}
 	}
+
 	models.push_back(std::make_shared<Model>(plane));
 	
 	// Perform rendering loop
@@ -351,16 +367,16 @@ main(void)
 		handle_keyboard_input(window);
 		
 		// Update cube state
-		for (unsigned int i = 0; i < 10; i++)
-		{
-			float angle = 20.0f * i;
-			float rotation =
-				(float)glfwGetTime() * glm::radians(50.0f)
-				+ glm::radians(angle);
-			cubes[i]->rotation_axis =
-				glm::vec3(0.5f, 1.0f, 0.0f);
-			cubes[i]->rotation_angle_rad = rotation;
-		}
+//		for (unsigned int i = 0; i < 10; i++)
+//		{
+//			float angle = 20.0f * i;
+//			float rotation =
+//				(float)glfwGetTime() * glm::radians(50.0f)
+//				+ glm::radians(angle);
+//			cubes[i]->rotation_axis =
+//				glm::vec3(0.5f, 1.0f, 0.0f);
+//			cubes[i]->rotation_angle_rad = rotation;
+//		}
 		
 		depth_map_pass.draw(models);
 		draw_pass.draw(models);

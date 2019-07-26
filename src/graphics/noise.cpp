@@ -173,20 +173,22 @@ Noise::Image::Image(
 	// Manually allocate the buffer.
 	data = new unsigned char[width * height * channels];
 	
-	// Iterate through each pixel
+	// Iterate through each pixel.
 	for (int ix = 0; ix < width; ix++)
 		for (int iy = 0; iy < height; iy++)
 		{
-			// Convert the indices to [0, scale] range
+			// Convert the indices to [0, scale] range.
 			double x_noise = (scale / width) * ix;
 			double y_noise = (scale / height) * iy;
 			double noise = perlin.noise(x_noise, y_noise, 1.0f);
 			
-			// Insert gray into all three channels as a [0, 255] int
+			// Convert to a [0, 255] int.
 			int pixel_idx =
 				(ix * channels) + (iy * width * channels);
 			int gray = (uint8_t)(255.0f * noise);
 			
+			// Insert in required channels. Unless its alpha, then
+			// just set it to 255.
 			switch (layout)
 			{
 				case layout_rgba:

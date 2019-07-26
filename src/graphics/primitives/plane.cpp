@@ -11,6 +11,9 @@ const int plane_stride = 8;
 /// \return Returns the pointer to the vertices array.
 float *plane_vertices(float x_sz, float z_sz, float uv_scale)
 {
+	x_sz /= 2;
+	z_sz /= 2;
+	
 	float verts[] = {
 		// Positions          // Normals        // Tex coords
 		x_sz,  0.0f,  z_sz, 0.0f, 1.0f, 0.0f, uv_scale, 0.0f,
