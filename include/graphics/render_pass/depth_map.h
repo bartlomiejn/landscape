@@ -12,7 +12,7 @@
 class DepthMapRenderPass
 {
 public:
-	SpotLight &light;
+	DirectionalLight &light;
 	Shader &shader;
 	Framebuffer &fb;
 	unsigned int width;
@@ -29,7 +29,7 @@ public:
 	/// \param width Depth map width.
 	/// \param height Depth map height.
 	DepthMapRenderPass(
-		SpotLight &light, Shader &shader, Framebuffer &fb,
+		DirectionalLight &light, Shader &shader, Framebuffer &fb,
 		unsigned int width, unsigned int height
 	):
 		light(light),
@@ -59,8 +59,8 @@ public:
 		glm::mat4 light_proj = glm::ortho(
 			-20.0f, 20.0f, -20.0f, 20.0f, near_plane, far_plane);
 		glm::mat4 light_view = glm::lookAt(
-			light.position,
-			light.direction,
+			-light.direction + light.look_at,
+			light.look_at,
 			glm::vec3(0.0f, 1.0f, 0.0f));
 		light_vp = light_proj * light_view;
 		

@@ -11,7 +11,7 @@ struct DrawObjectsContext
 	glm::mat4 projection;
 	glm::mat4 light_vp;
 	glm::vec3 view_pos;
-	SpotLight &light;
+	DirectionalLight &light;
 	unsigned int diff_slot;
 	unsigned int spec_slot;
 	unsigned int depthmap_slot;
@@ -22,7 +22,7 @@ struct DrawObjectsContext
 		glm::mat4 projection,
 		glm::mat4 light_vp,
 		glm::vec3 view_pos,
-		SpotLight &light,
+		DirectionalLight &light,
 		unsigned int diff_slot,
 		unsigned int spec_slot,
 		unsigned int depthmap_slot,
@@ -39,6 +39,5 @@ struct DrawObjectsContext
 		depthmap_tex(depthmap_tex)
 	{}
 };
-
 
 #endif //LANDSCAPE_CONTEXT_H

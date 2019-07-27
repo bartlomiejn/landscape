@@ -116,7 +116,10 @@ float is_in_shadow(vec4 frag_pos_light_space)
 		// Sample the disk
 		vec2 offset = poisson_disk[index] / 700.0;
 
-		vec2 sample_pos = clamp(proj_coords.xy + offset, vec2(0.001, 0.001), vec2(0.999, 0.999));
+		// Correct the issue with sampling near the border
+		vec2 sample_pos = clamp(
+			proj_coords.xy + offset,
+			vec2(0.001, 0.001), vec2(0.999, 0.999));
 
 		// Get the closest fragment depth from the depth buffer
 		float closest_depth = texture(shadow_map, sample_pos).r;
@@ -148,7 +151,9 @@ vec3 dir_light_contribution(DirLight light, vec3 normal, vec3 view_dir)
 		* spec
 		* light.specular;
 
-	return (ambient + diffuse + specular);
+	float shadow = is_in_shadow(frag_pos_light_space);
+	return (ambient + (1.0 - shadow) * (diffuse + specular));
+//	return ambient + diffuse + specular;
 }
 
 vec3 pt_light_contribution(
@@ -209,8 +214,6 @@ vec3 spot_light_contribution(
 	float intensity =
 		clamp((theta_cos - light.outer_cut_off_cos) / epsilon, 0.0, 1.0);
 
-	float shadow = is_in_shadow(frag_pos_light_space);
-
 	// Diffuse
 	float diff = max(dot(light_dir, normal), 0.0);
 	vec3 diffuse = vec3(texture(material.diffuse, tex_coords))
@@ -227,7 +230,7 @@ vec3 spot_light_contribution(
 		* attenuation;
 //		* intensity;
 
-	return (ambient + (1.0 - shadow) * (diffuse + specular));
+	return (ambient + diffuse + specular);
 }
 
 void main()

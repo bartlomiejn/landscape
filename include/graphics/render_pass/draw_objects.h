@@ -16,7 +16,7 @@
 class DrawObjectsRenderPass
 {
 public:
-	SpotLight &light;
+	DirectionalLight &light;
 	MaterialShader &shader;
 	Camera &camera;
 	DepthMapRenderPass &depth_pass;
@@ -26,7 +26,7 @@ public:
 	float far_plane = 100.0f;
 	
 	DrawObjectsRenderPass(
-		SpotLight &light,
+		DirectionalLight &light,
 		MaterialShader &shader,
 		Camera &camera,
 		DepthMapRenderPass &depth_pass,

@@ -25,7 +25,6 @@
 // TODO LIST
 //
 // TODO: (PERFORMANCE) Instanced rendering of blocks
-// TODO: (BUG) Shading is based on a point light, but shadow map is directional
 // TODO: (FEATURE) GUI
 // TODO: (IMPROVE) Add texture slots to `Material`
 // TODO: (IMPROVE) Extract mouse and keyboard input
@@ -38,21 +37,8 @@
 
 const unsigned int window_width = 1280;
 const unsigned int window_height = 720;
-const unsigned int shadow_map_width = 1024;
-const unsigned int shadow_map_height = 1024;
-
-glm::vec3 cube_positions[] = {
-	glm::vec3( 0.0f,  0.0f,  0.0f),
-	glm::vec3( 2.0f,  5.0f, -15.0f),
-	glm::vec3(-1.5f, -2.2f, -2.5f),
-	glm::vec3(-3.8f, -2.0f, -12.3f),
-	glm::vec3( 2.4f, -0.4f, -3.5f),
-	glm::vec3(-1.7f,  3.0f, -7.5f),
-	glm::vec3( 1.3f, -2.0f, -2.5f),
-	glm::vec3( 1.5f,  2.0f, -2.5f),
-	glm::vec3( 1.5f,  0.2f, -1.5f),
-	glm::vec3(-1.3f,  1.0f, -1.5f)
-};
+const unsigned int shadow_map_width = 2048;
+const unsigned int shadow_map_height = 2048;
 
 float delta_time = 0.0f; /// Time between current frame and last frame
 float last_frame = 0.0f; /// Time of last frame
@@ -64,22 +50,21 @@ float mouse_sensitivity = 0.05f;
 float movement_speed = 5.0f;
 
 Camera camera(
-	glm::vec3(0.0f, 6.0f, 3.0f), 	// Position
+	glm::vec3(-14.0f, 6.0f, 0.0f), 	// Position
 	glm::vec3(0.0f, 1.0f, 0.0f), 	// World up vector
 	0.0f, 				// Yaw
 	0.0f, 				// Pitch
 	45.0f); 			// FOV
 
-glm::vec3 sunlight_offset = glm::vec3(8.0f, 20.0f, 4.0f);
-SpotLight sunlight(
-	sunlight_offset + camera.position(), // Position
-	camera.position(),	     	     // Direction
-	glm::vec3(0.3f, 0.3f, 0.3f), 	     // Ambient
-	glm::vec3(0.5f, 0.5f, 0.5f), 	     // Diffuse
-	glm::vec3(1.0f, 1.0f, 1.0f),	     // Specular
-	glm::cos(glm::radians(12.5f)),	     // Inner cut off
-	glm::cos(glm::radians(17.5f)));      // Outer cut off
-	
+glm::vec3 sunlight_dir = glm::vec3(8.0f, -20.0f, 4.0f);
+
+DirectionalLight sunlight(
+	camera.position(), 		// Look at point
+	sunlight_dir,	     		// Reversed direction vector
+	glm::vec3(0.2f, 0.2f, 0.2f), 	// Ambient
+	glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
+	glm::vec3(1.0f, 1.0f, 1.0f));	// Specular)
+
 // Materials
 
 Image grass("assets/grass-512.jpg");
@@ -128,7 +113,7 @@ const int chunk_sz = 24;
 float height_offset = -114.5f;
 Noise::Perlin perlin;
 
-Noise::Image  heightmap(perlin, chunk_sz, chunk_sz, layout_rgb, 4.0f, 6, 0.4f);
+Noise::Image  heightmap(perlin, chunk_sz, chunk_sz, layout_rgb, 4.0f, 6, 0.45f);
 Texture       heightmap_tex(&heightmap, layout_rgb, filter_nearest);
 Material      heightmap_mtl(&heightmap_tex, &heightmap_tex, 0.0f);
 
@@ -137,7 +122,7 @@ Noise::Volume<chunk_sz, chunk_sz, chunk_sz> chunk(
 	4.0f, 	// Initial frequency
 	6, 	// Octave count
 	0.4f, 	// Persistence
-	0.45f);	// Threshold value for noise
+	0.6f);	// Threshold value for noise
 
 std::vector<std::shared_ptr<Model>> terrain_blocks;
 
@@ -248,10 +233,9 @@ debug_shadow_map_pass()
 	glEnable(GL_DEPTH_TEST);
 }
 
-void update_light_position()
+void update_sunlight()
 {
-	sunlight.position = sunlight_offset + camera.position();
-	sunlight.direction = camera.position();
+	sunlight.look_at = camera.position();
 }
 
 int
@@ -316,26 +300,26 @@ main(void)
 		depth_map_fb.set_draw(false);
 		depth_map_fb.set_read(false);
 	}
-	catch (ShaderCompileFailure err)
+	catch (ShaderCompileFailure &err)
 	{
 		std::cout << "Shader compilation failure." << std::endl;
 		glfwTerminate();
 		return -1;
 	}
-	catch (ShaderLinkFailure err)
+	catch (ShaderLinkFailure &err)
 	{
 		std::cout << "Shader link failure." << std::endl;
 		glfwTerminate();
 		return -1;
 	}
-	catch (ImageLoadFailure err)
+	catch (ImageLoadFailure &err)
 	{
 		std::cout << "Image loading failure: " << err.filename
 			  << std::endl;
 		glfwTerminate();
 		return -1;
 	}
-	catch (FramebufferGenerationFailure err)
+	catch (FramebufferGenerationFailure &err)
 	{
 		std::cout << "Framebuffer generation failure." << std::endl;
 		glfwTerminate();
@@ -372,7 +356,7 @@ main(void)
 		
 		handle_keyboard_input(window);
 		
-		update_light_position();
+		update_sunlight();
 		
 		depth_map_pass.draw(models);
 		draw_pass.draw(models);

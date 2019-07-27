@@ -46,7 +46,7 @@ Model::draw(DrawObjectsContext &ctx) const
 		mtl_shader->set_uniform("projection", ctx.projection);
 		mtl_shader->set_uniform("light_space_matrix", ctx.light_vp);
 		mtl_shader->set_uniform("view_pos", ctx.view_pos);
-		mtl_shader->set_spot_light(ctx.light);
+		mtl_shader->set_dir_light(ctx.light);
 		mtl_shader->set_uniform(
 			"material.shininess", material->shininess);
 		mtl_shader->set_uniform("material.diffuse", (int)ctx.diff_slot);

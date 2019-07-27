@@ -6,24 +6,39 @@
 class DirectionalLight
 {
 public:
+	glm::vec3 look_at; 	///< Used only for depth/shadow map calculation.
+	glm::vec3 direction;
+	glm::vec3 ambient;
+	glm::vec3 diffuse;
+	glm::vec3 specular;
+	
 	DirectionalLight(
-		glm::vec3 dir, glm::vec3 amb, glm::vec3 diff, glm::vec3 spec
+		glm::vec3 look_at,
+		glm::vec3 dir,
+		glm::vec3 amb,
+		glm::vec3 diff,
+		glm::vec3 spec
 	):
+		look_at(look_at),
 		direction(dir),
 		ambient(amb),
 		diffuse(diff),
 		specular(spec)
 	{};
-	
-	glm::vec3 direction;
-	glm::vec3 ambient;
-	glm::vec3 diffuse;
-	glm::vec3 specular;
 };
 
 class PointLight
 {
 public:
+	glm::vec3 position;
+	glm::vec3 ambient;
+	glm::vec3 diffuse;
+	glm::vec3 specular;
+	
+	float att_constant;
+	float att_linear;
+	float att_quadratic;
+	
 	PointLight(
 		glm::vec3 pos, glm::vec3 amb, glm::vec3 diff, glm::vec3 spec,
 		float att_const = 1.0, float att_lin = 0.045,
@@ -37,20 +52,24 @@ public:
 		att_linear(att_lin),
 		att_quadratic(att_quad)
 	{};
-
-	glm::vec3 position;
-	glm::vec3 ambient;
-	glm::vec3 diffuse;
-	glm::vec3 specular;
-	
-	float att_constant;
-	float att_linear;
-	float att_quadratic;
 };
 
 class SpotLight
 {
 public:
+	glm::vec3 position;
+	glm::vec3 direction;
+	glm::vec3 ambient;
+	glm::vec3 diffuse;
+	glm::vec3 specular;
+	
+	float cut_off_cos;
+	float outer_cut_off_cos;
+	
+	float att_constant;
+	float att_linear;
+	float att_quadratic;
+	
 	/// Creates a spot light.
 	///
 	/// \param pos Position of the light
@@ -79,19 +98,6 @@ public:
 		att_linear(att_lin),
 		att_quadratic(att_quad)
 	{};
-	
-	glm::vec3 position;
-	glm::vec3 direction;
-	glm::vec3 ambient;
-	glm::vec3 diffuse;
-	glm::vec3 specular;
-	
-	float cut_off_cos;
-	float outer_cut_off_cos;
-	
-	float att_constant;
-	float att_linear;
-	float att_quadratic;
 };
 
 // Attenuation table
