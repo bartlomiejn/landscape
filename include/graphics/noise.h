@@ -107,7 +107,8 @@ namespace Noise
 		/// \param threshold Threshold limit.
 		Volume(
 			OctavedGenerator &gen, float frequency, int octaves,
-			double persistence, double threshold = 0.5f
+			double persistence, double threshold = 0.5f,
+			bool invert_thresh = false
 		){
 			for (int ix = 0; ix < x_sz; ix++)
 			for (int iy = 0; iy < y_sz; iy++)
@@ -121,7 +122,10 @@ namespace Noise
 					xi, yi, zi, octaves, persistence);
  
 				// Threshold the output
-				set(ix, iy, iz, (noise > threshold)
+				set(ix, iy, iz,
+					(invert_thresh
+						? noise > threshold
+						: noise < threshold)
 					? (unsigned char)0x1
 					: (unsigned char)0x0);
 			}

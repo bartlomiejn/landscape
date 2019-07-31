@@ -48,13 +48,15 @@ set(SOURCES
         src/graphics/image.cpp
         src/graphics/camera.cpp
         src/graphics/texture.cpp
+        src/graphics/buffer.cpp
         src/graphics/framebuffer.cpp
         src/graphics/mesh.cpp
+        src/graphics/model.cpp
+        src/graphics/model_group.cpp
+        src/graphics/noise.cpp
         src/graphics/primitives/cube.cpp
         src/graphics/primitives/plane.cpp
-        src/graphics/model.cpp
-        src/graphics/noise.cpp
-        )
+        src/graphics/render_pass/draw_objects.cpp)
 
 add_executable(landscape ${SOURCES})
 add_dependencies(landscape glfw glm)

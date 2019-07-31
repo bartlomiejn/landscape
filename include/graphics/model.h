@@ -7,7 +7,16 @@
 #include <graphics/material.h>
 #include <graphics/render_pass/context.h>
 
-class Model
+class Drawable
+{
+	/// Draw in a draw objects context.
+	virtual void draw(DrawObjectsContext &ctx) = 0;
+	
+	/// Draw overriding the stored shader.
+	virtual void draw(Shader &override_shader) = 0;
+};
+
+class Model : public Drawable
 {
 public:
 	Mesh *mesh;
@@ -29,13 +38,13 @@ public:
 	
 	glm::mat4 model_matrix() const;
 	
+	// Drawable
+	
 	/// Draw in a draw objects context.
-	/// \param ctx
-	void draw(DrawObjectsContext &ctx) const;
+	void draw(DrawObjectsContext &ctx) final;
 	
 	/// Draw overriding the stored shader. Used in depth map pass.
-	/// \param shader
-	void draw(Shader &override_shader) const;
+	void draw(Shader &override_shader) final;
 };
 
 #endif //LANDSCAPE_MODEL_H

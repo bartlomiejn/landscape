@@ -15,6 +15,7 @@
 #include <graphics/light.h>
 #include <graphics/mesh.h>
 #include <graphics/model.h>
+#include <graphics/model_group.h>
 #include <graphics/material.h>
 #include <graphics/noise.h>
 #include <graphics/primitives/cube.h>
@@ -25,6 +26,7 @@
 // TODO LIST
 //
 // TODO: (PERFORMANCE) Instanced rendering of blocks
+// TODO: (FEATURE) Screen-space ambient occlusion
 // TODO: (FEATURE) GUI
 // TODO: (IMPROVE) Add texture slots to `Material`
 // TODO: (IMPROVE) Extract mouse and keyboard input
@@ -61,20 +63,22 @@ glm::vec3 sunlight_dir = glm::vec3(8.0f, -20.0f, 4.0f);
 DirectionalLight sunlight(
 	camera.position(), 		// Look at point
 	sunlight_dir,	     		// Reversed direction vector
-	glm::vec3(0.2f, 0.2f, 0.2f), 	// Ambient
+	glm::vec3(0.3f, 0.3f, 0.3f), 	// Ambient
 	glm::vec3(0.5f, 0.5f, 0.5f), 	// Diffuse
 	glm::vec3(1.0f, 1.0f, 1.0f));	// Specular)
 
 // Materials
 
-Image grass("assets/grass-512.jpg");
 Image ground_d("assets/blocks/ground_diff.jpg");
+Image ground_s("assets/blocks/ground_spec.jpg");
 Texture ground_d_tex(&ground_d, layout_rgb, filter_linear);
-Material ground_mtl(&ground_d_tex, &ground_d_tex, 128.0f);
+Texture ground_s_tex(&ground_s, layout_r, filter_linear);
+Material ground_mtl(&ground_d_tex, &ground_s_tex, 64.0f);
 
 // Shaders
 
 MaterialShader mtl_shader("glsl/vertex.glsl");
+MaterialShader instanced_mtl_shader("glsl/inst_vertex.glsl");
 Shader depth_map_shader(
 	"glsl/shadowmap_vertex.glsl", "glsl/shadowmap_frag.glsl");
 Shader depth_debug_shader(
@@ -104,32 +108,27 @@ DrawObjectsRenderPass draw_pass(
 
 // Cubes
 
-CubeMesh cube_mesh(1.0f, 1.0f, 1.0f);
-std::vector<std::shared_ptr<Model>> cubes;
-
 // Terrain
 
-const int chunk_sz = 24;
+const int chunk_sz = 16;
 float height_offset = -114.5f;
+CubeMesh cube_mesh(1.0f, 1.0f, 1.0f);
 Noise::Perlin perlin;
-
-Noise::Image  heightmap(perlin, chunk_sz, chunk_sz, layout_rgb, 4.0f, 6, 0.45f);
-Texture       heightmap_tex(&heightmap, layout_rgb, filter_nearest);
-Material      heightmap_mtl(&heightmap_tex, &heightmap_tex, 0.0f);
-
 Noise::Volume<chunk_sz, chunk_sz, chunk_sz> chunk(
 	perlin,	// Noise generator
 	4.0f, 	// Initial frequency
 	6, 	// Octave count
 	0.4f, 	// Persistence
-	0.6f);	// Threshold value for noise
-
-std::vector<std::shared_ptr<Model>> terrain_blocks;
+	0.5f);	// Threshold value for noise
+ModelGroup terrain_chunk;
 
 // Heightmap plane
 
-PlaneMesh    plane_mesh((float)chunk_sz, (float)chunk_sz, 1.0f);
-Model        plane(
+PlaneMesh     plane_mesh((float)chunk_sz, (float)chunk_sz, 1.0f);
+Noise::Image  heightmap(perlin, chunk_sz, chunk_sz, layout_rgb, 4.0f, 6, 0.45f);
+Texture       heightmap_tex(&heightmap, layout_rgb, filter_nearest);
+Material      heightmap_mtl(&heightmap_tex, &heightmap_tex, 0.0f);
+Model         plane(
 	&plane_mesh, &mtl_shader, &heightmap_mtl, glm::vec3(-0.5f, -3.0f, -0.5f));
 
 void
@@ -233,7 +232,8 @@ debug_shadow_map_pass()
 	glEnable(GL_DEPTH_TEST);
 }
 
-void update_sunlight()
+void
+update_sunlight()
 {
 	sunlight.look_at = camera.position();
 }
@@ -285,11 +285,12 @@ main(void)
 		depth_map_shader.try_create_and_link();
 		depth_debug_shader.try_create_and_link();
 		white_shader.try_create_and_link();
-		
-		grass.try_load();
+
 		ground_d.try_load();
+		ground_s.try_load();
 		
 		ground_d_tex.load();
+		ground_s_tex.load();
 		depthmap_tex.load();
 		heightmap_tex.load();
 		
@@ -342,7 +343,7 @@ main(void)
 				&cube_mesh, &mtl_shader, &ground_mtl,
 				translation);
 			
-			terrain_blocks.push_back(cube_ptr);
+			terrain_chunk.push_back(cube_ptr);
 			models.push_back(cube_ptr);
 		}
 	}
@@ -359,7 +360,8 @@ main(void)
 		update_sunlight();
 		
 		depth_map_pass.draw(models);
-		draw_pass.draw(models);
+		draw_pass.prepare();
+		draw_pass.draw(terrain_chunk);
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();

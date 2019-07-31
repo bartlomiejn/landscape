@@ -25,10 +25,12 @@ public:
 	
 	/// Draws using the mesh.
 	void draw() const;
+	
 protected:
 	float *vertices;
 	int vertices_count;
 	int vertex_stride;
+	
 private:
 	unsigned int vao; ///< Internal vertex array object identifier.
 	unsigned int vbo; ///< Internal vertex buffer object identifier.

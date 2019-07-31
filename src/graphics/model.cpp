@@ -31,7 +31,7 @@ Model::model_matrix() const
 }
 
 void
-Model::draw(DrawObjectsContext &ctx) const
+Model::draw(DrawObjectsContext &ctx)
 {
 	if (shader == nullptr || mesh == nullptr)
 		return;
@@ -66,7 +66,7 @@ Model::draw(DrawObjectsContext &ctx) const
 }
 
 void
-Model::draw(Shader &override_shader) const
+Model::draw(Shader &override_shader)
 {
 	if (mesh == nullptr)
 		return;

@@ -42,7 +42,7 @@ public:
 	/// Draws a depth map for provided models.
 	///
 	/// \tparam Container Container type
-	/// \param models Container of pointers to `Model`s
+	/// \param models Container of pointers to Models
 	template <typename Container>
 	void
 	draw(Container models)
@@ -57,7 +57,7 @@ public:
 		glEnable(GL_DEPTH_TEST);
 		
 		glm::mat4 light_proj = glm::ortho(
-			-20.0f, 20.0f, -20.0f, 20.0f, near_plane, far_plane);
+			-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
 		glm::mat4 light_view = glm::lookAt(
 			-light.direction + light.look_at,
 			light.look_at,

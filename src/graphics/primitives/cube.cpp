@@ -14,6 +14,7 @@ float *cube_vertices(float x_sz, float y_sz, float z_sz, float uv_scale)
 	x_sz /= 2;
 	y_sz /= 2;
 	z_sz /= 2;
+	
 	float verts[] = {
 		// Positions          // Normals           // Tex coords
 		-x_sz, -y_sz, -z_sz,  0.0f,  0.0f,  -1.0f, 0.0f,     0.0f,
