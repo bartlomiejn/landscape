@@ -14,7 +14,7 @@ ModelGroup::ModelGroup(std::vector<std::shared_ptr<Model>> models) :
 		[](std::shared_ptr<Model> model) {
 			return model->model_matrix();
 		});
-	buffer = GPU::Buffer(model_mats, sizeof(glm::mat4), models.size());
+	mdl_mat_buffer = GPU::Buffer(model_mats, sizeof(glm::mat4), models.size());
 }
 
 void
@@ -55,8 +55,6 @@ ModelGroup::draw(DrawObjectsContext &ctx)
 	
 	shader->use();
 	
-//	shader->set_uniform("model", models[0]->model_matrix());
-	
 	MaterialShader *mtl_shader = dynamic_cast<MaterialShader*>(shader);
 	if (mtl_shader && mtl)
 	{
@@ -80,7 +78,7 @@ ModelGroup::draw(DrawObjectsContext &ctx)
 	}
 	
 	mesh->use();
-	mesh->draw();
+	mesh->draw(mdl_mat_buffer, models.size());
 }
 
 void
@@ -89,7 +87,6 @@ ModelGroup::draw(Shader &override_shader)
 	// TODO: Implementation
 }
 
-/// Updates the GPU buffer with model matrix content.
 void
 ModelGroup::update_buffer()
 {
@@ -102,5 +99,5 @@ ModelGroup::update_buffer()
 		[](std::__1::shared_ptr<Model> model) {
 			return model->model_matrix();
 		});
-	buffer.update(model_mats, sizeof(glm::mat4), models.size());
+	mdl_mat_buffer.update(model_mats, sizeof(glm::mat4), models.size());
 }

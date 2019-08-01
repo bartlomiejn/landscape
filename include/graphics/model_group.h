@@ -30,9 +30,10 @@ public:
 	/// Draw overriding the stored shader. Used in depth map pass.
 	void draw(Shader &override_shader) final;
 private:
-	std::vector<std::shared_ptr<Model>> models;
-	GPU::Buffer buffer;
+	std::vector<std::shared_ptr<Model>> models; ///< Pointers to models
+	GPU::Buffer mdl_mat_buffer; 		    ///< Model matrix GPU buffer.
 	
+	/// Updates the GPU buffer with model matrix content.
 	void update_buffer();
 };
 

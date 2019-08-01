@@ -22,6 +22,9 @@ namespace GPU
 			void *items, size_t item_size,
 			unsigned long items_count);
 		
+		/// Set the buffer as active.
+		void use();
+		
 		/// Update the buffer contents.
 		/// \param items
 		/// \param item_size

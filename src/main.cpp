@@ -78,7 +78,7 @@ Material ground_mtl(&ground_d_tex, &ground_s_tex, 64.0f);
 // Shaders
 
 MaterialShader mtl_shader("glsl/vertex.glsl");
-MaterialShader instanced_mtl_shader("glsl/inst_vertex.glsl");
+MaterialShader instrender_mtl_shader("glsl/inst_vertex.glsl");
 Shader depth_map_shader(
 	"glsl/shadowmap_vertex.glsl", "glsl/shadowmap_frag.glsl");
 Shader depth_debug_shader(
@@ -340,7 +340,7 @@ main(void)
 				(float)iz - (float)chunk_sz / 2.0f);
 			
 			auto cube_ptr = std::make_shared<Model>(
-				&cube_mesh, &mtl_shader, &ground_mtl,
+				&cube_mesh, &instrender_mtl_shader, &ground_mtl,
 				translation);
 			
 			terrain_chunk.push_back(cube_ptr);

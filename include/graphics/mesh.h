@@ -1,6 +1,8 @@
 #ifndef LANDSCAPE_MESH_H
 #define LANDSCAPE_MESH_H
 
+#include <graphics/buffer.h>
+
 class Mesh
 {
 public:
@@ -25,6 +27,13 @@ public:
 	
 	/// Draws using the mesh.
 	void draw() const;
+	
+	/// Performs instanced drawing using the mesh.
+	/// \param model_matrix_buffer Model matrix buffer to use.
+	/// \param instance_count Instance count.
+	void draw(
+		GPU::Buffer &model_matrix_buffer, unsigned long instance_count
+	) const;
 	
 protected:
 	float *vertices;
