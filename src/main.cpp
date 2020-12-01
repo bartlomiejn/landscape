@@ -1,12 +1,9 @@
 #include <iostream>
 #include <vector>
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#include <range.h>
 #include <graphics/shader.h>
 #include <graphics/image.h>
 #include <graphics/camera.h>
@@ -17,14 +14,16 @@
 #include <graphics/model.h>
 #include <graphics/material.h>
 #include <graphics/noise.h>
+#include <graphics/volume.h>
 #include <graphics/primitives/cube.h>
 #include <graphics/primitives/plane.h>
 #include <graphics/render_pass/depth_map.h>
 #include <graphics/render_pass/draw_objects.h>
+#include <range.h>
+#include <logger.h>
 
 // TODO LIST
 //
-// TODO: (PERFORMANCE) Instanced rendering of blocks
 // TODO: (FEATURE) GUI
 // TODO: (IMPROVE) Add texture slots to `Material`
 // TODO: (IMPROVE) Extract mouse and keyboard input
@@ -34,6 +33,8 @@
 // TODO: (IMPROVE) Find a way to use templates and still have header/implementation separation.
 // TODO: (IMPROVE) Create platform-agnostic abstract types
 // TODO: (BUG) Viewport should be scaled by 2x on Retina-like displays
+
+#define MAIN_DBG Log::Logger(Log::Level::Debug, "main")
 
 const unsigned int window_width = 1280;
 const unsigned int window_height = 720;
@@ -47,10 +48,10 @@ float mouse_last_x = window_width / 2;
 float mouse_last_y = window_height / 2;
 float mouse_sensitivity = 0.05f;
 
-float movement_speed = 5.0f;
+float movement_speed = 10.0f;
 
 Camera camera(
-	glm::vec3(-14.0f, 6.0f, 0.0f), 	// Position
+	glm::vec3(-14.0f, 6.0f, -5.0f), // Position
 	glm::vec3(0.0f, 1.0f, 0.0f), 	// World up vector
 	0.0f, 				// Yaw
 	0.0f, 				// Pitch
@@ -67,7 +68,6 @@ DirectionalLight sunlight(
 
 // Materials
 
-Image grass("assets/grass-512.jpg");
 Image ground_d("assets/blocks/ground_diff.jpg");
 Texture ground_d_tex(&ground_d, layout_rgb, filter_linear);
 Material ground_mtl(&ground_d_tex, &ground_d_tex, 128.0f);
@@ -104,31 +104,35 @@ DrawObjectsRenderPass draw_pass(
 
 // Cubes
 
-CubeMesh cube_mesh(1.0f, 1.0f, 1.0f);
-std::vector<std::shared_ptr<Model>> cubes;
+constexpr const int cnk_v_cnt = 24;
+constexpr const double cnk_v_sz = 1.0f;
+
+using ChunkVolumeMesh = GFX::VolumeMesh<cnk_v_cnt, cnk_v_cnt, cnk_v_cnt>;
+
+GFX::CubeMesh cube_mesh(1.0f, 1.0f, 1.0f);
 
 // Terrain
-
-const int chunk_sz = 24;
 float height_offset = -114.5f;
 Noise::Perlin perlin;
 
-Noise::Image  heightmap(perlin, chunk_sz, chunk_sz, layout_rgb, 4.0f, 6, 0.45f);
+Noise::Image  heightmap(perlin, cnk_v_cnt, cnk_v_cnt, layout_rgb, 4.0f, 6, 0.45f);
 Texture       heightmap_tex(&heightmap, layout_rgb, filter_nearest);
 Material      heightmap_mtl(&heightmap_tex, &heightmap_tex, 0.0f);
 
-Noise::Volume<chunk_sz, chunk_sz, chunk_sz> chunk(
+// 3D Perlin
+Noise::Volume<cnk_v_cnt, cnk_v_cnt, cnk_v_cnt> perlin_volume(
 	perlin,	// Noise generator
 	4.0f, 	// Initial frequency
-	6, 	// Octave count
+	6, 		// Octave count
 	0.4f, 	// Persistence
 	0.6f);	// Threshold value for noise
 
-std::vector<std::shared_ptr<Model>> terrain_blocks;
+// 3D Perlin Volume
+GFX::Volume<cnk_v_cnt, cnk_v_cnt, cnk_v_cnt> chunk_volume;
 
 // Heightmap plane
 
-PlaneMesh    plane_mesh((float)chunk_sz, (float)chunk_sz, 1.0f);
+GFX::PlaneMesh    plane_mesh((float)cnk_v_cnt, (float)cnk_v_cnt, 1.0f);
 Model        plane(
 	&plane_mesh, &mtl_shader, &heightmap_mtl, glm::vec3(-0.5f, -3.0f, -0.5f));
 
@@ -180,6 +184,10 @@ handle_keyboard_input(GLFWwindow *window)
 		camera.move(direction_left, per_frame_speed);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.move(direction_right, per_frame_speed);
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		camera.move(direction_up, per_frame_speed);
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+		camera.move(direction_down, per_frame_speed);
 }
 
 unsigned int debug_quad_vao = 0;
@@ -286,7 +294,6 @@ main(void)
 		depth_debug_shader.try_create_and_link();
 		white_shader.try_create_and_link();
 		
-		grass.try_load();
 		ground_d.try_load();
 		
 		ground_d_tex.load();
@@ -325,29 +332,37 @@ main(void)
 		glfwTerminate();
 		return -1;
 	}
-	
-	// Prepare terrain blocks
-	for (int ix = 0; ix < chunk_sz; ix++)
-	for (int iy = 0; iy < chunk_sz; iy++)
-	for (int iz = 0; iz < chunk_sz; iz++)
+
+	// Prepare terrain
+	for (int ix = 0; ix < cnk_v_cnt; ix++)
+	for (int iy = 0; iy < cnk_v_cnt; iy++)
+	for (int iz = 0; iz < cnk_v_cnt; iz++)
 	{
-		if (chunk.try_sample(ix, iy, iz) != 0)
-		{
-			glm::vec3 translation(
-				(float)ix - (float)chunk_sz / 2.0f,
-				(float)iy - (float)chunk_sz / 2.0f,
-				(float)iz - (float)chunk_sz / 2.0f);
+		int sample = perlin_volume.sample(ix, iy, iz);
+		GFX::Voxel &voxel = chunk_volume.voxel_at(ix, iy, iz);
+		voxel.material = sample;
+
+		// if (voxel.material != 0)
+		// {
+		// 	glm::vec3 translation(
+		// 		(float)ix - (float)cnk_v_cnt / 2.0f,
+		// 		(float)iy - (float)cnk_v_cnt / 2.0f,
+		// 		(float)iz - (float)cnk_v_cnt / 2.0f);
 			
-			auto cube_ptr = std::make_shared<Model>(
-				&cube_mesh, &mtl_shader, &ground_mtl,
-				translation);
-			
-			terrain_blocks.push_back(cube_ptr);
-			models.push_back(cube_ptr);
-		}
+		// 	auto cube_ptr = std::make_shared<Model>(
+		// 		&cube_mesh, &mtl_shader, &ground_mtl, translation);
+
+		// 	models.push_back(cube_ptr);
+		// }
 	}
-	
-	// Perform rendering loop
+
+	ChunkVolumeMesh chunk_mesh(chunk_volume, 1.0f);
+	chunk_mesh.load();
+	auto chunk_model = std::make_shared<Model>(
+		&chunk_mesh, &mtl_shader, &ground_mtl, glm::vec3(0.0f, 0.0f, 0.0f));
+	models.push_back(chunk_model);
+
+	// Main loop
 	while (!glfwWindowShouldClose(window))
 	{
 		float current_frame = glfwGetTime();

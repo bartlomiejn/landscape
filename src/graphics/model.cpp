@@ -1,9 +1,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <graphics/model.h>
 
-
 Model::Model(
-	Mesh *mesh,
+	GFX::Mesh *mesh,
 	Shader *shader,
 	Material *material,
 	glm::vec3 translation,

@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <graphics/primitives/cube.h>
 
+using namespace GFX;
+
 const int cube_verts = 36;
 const int cube_stride = 8;
 
@@ -16,42 +18,42 @@ float *cube_vertices(float x_sz, float y_sz, float z_sz, float uv_scale)
 	z_sz /= 2;
 	float verts[] = {
 		// Positions          // Normals           // Tex coords
-		-x_sz, -y_sz, -z_sz,  0.0f,  0.0f,  -1.0f, 0.0f,     0.0f,
+		-x_sz, -y_sz, -z_sz,  0.0f,  0.0f,  -1.0f, 0.0f,     0.0f, // back
 		x_sz,  -y_sz, -z_sz,  0.0f,  0.0f,  -1.0f, uv_scale, 0.0f,
 		x_sz,  y_sz,  -z_sz,  0.0f,  0.0f,  -1.0f, uv_scale, uv_scale,
 		x_sz,  y_sz,  -z_sz,  0.0f,  0.0f,  -1.0f, uv_scale, uv_scale,
 		-x_sz, y_sz,  -z_sz,  0.0f,  0.0f,  -1.0f, 0.0f,     uv_scale,
 		-x_sz, -y_sz, -z_sz,  0.0f,  0.0f,  -1.0f, 0.0f,     0.0f,
 		
-		-x_sz, -y_sz, z_sz,   0.0f,  0.0f,  1.0f,  0.0f,     0.0f,
+		-x_sz, -y_sz, z_sz,   0.0f,  0.0f,  1.0f,  0.0f,     0.0f, // front
 		x_sz,  -y_sz, z_sz,   0.0f,  0.0f,  1.0f,  uv_scale, 0.0f,
 		x_sz,  y_sz,  z_sz,   0.0f,  0.0f,  1.0f,  uv_scale, uv_scale,
 		x_sz,  y_sz,  z_sz,   0.0f,  0.0f,  1.0f,  uv_scale, uv_scale,
 		-x_sz, y_sz,  z_sz,   0.0f,  0.0f,  1.0f,  0.0f,     uv_scale,
 		-x_sz, -y_sz, z_sz,   0.0f,  0.0f,  1.0f,  0.0f,     0.0f,
 		
-		-x_sz,  y_sz, z_sz,   -1.0f, 0.0f,  0.0f,  uv_scale, 0.0f,
+		-x_sz,  y_sz, z_sz,   -1.0f, 0.0f,  0.0f,  uv_scale, 0.0f, // left
 		-x_sz,  y_sz, -z_sz,  -1.0f, 0.0f,  0.0f,  uv_scale, uv_scale,
 		-x_sz, -y_sz, -z_sz,  -1.0f, 0.0f,  0.0f,  0.0f,     uv_scale,
 		-x_sz, -y_sz, -z_sz,  -1.0f, 0.0f,  0.0f,  0.0f,     uv_scale,
 		-x_sz, -y_sz, z_sz,   -1.0f, 0.0f,  0.0f,  0.0f,     0.0f,
 		-x_sz,  y_sz, z_sz,   -1.0f, 0.0f,  0.0f,  uv_scale, 0.0f,
 		
-		x_sz,  y_sz,  z_sz,   1.0f,  0.0f,  0.0f,  uv_scale, 0.0f,
+		x_sz,  y_sz,  z_sz,   1.0f,  0.0f,  0.0f,  uv_scale, 0.0f, // right
 		x_sz,  y_sz,  -z_sz,  1.0f,  0.0f,  0.0f,  uv_scale, uv_scale,
 		x_sz,  -y_sz, -z_sz,  1.0f,  0.0f,  0.0f,  0.0f,     uv_scale,
 		x_sz,  -y_sz, -z_sz,  1.0f,  0.0f,  0.0f,  0.0f,     uv_scale,
 		x_sz,  -y_sz, z_sz,   1.0f,  0.0f,  0.0f,  0.0f,     0.0f,
 		x_sz,  y_sz,  z_sz,   1.0f,  0.0f,  0.0f,  uv_scale, 0.0f,
 		
-		-x_sz, -y_sz, -z_sz,  0.0f,  -1.0f, 0.0f,  0.0f,     uv_scale,
+		-x_sz, -y_sz, -z_sz,  0.0f,  -1.0f, 0.0f,  0.0f,     uv_scale, // down
 		x_sz, -y_sz,  -z_sz,  0.0f,  -1.0f, 0.0f,  uv_scale, uv_scale,
 		x_sz, -y_sz,  z_sz,   0.0f,  -1.0f, 0.0f,  uv_scale, 0.0f,
 		x_sz, -y_sz,  z_sz,   0.0f,  -1.0f, 0.0f,  uv_scale, 0.0f,
 		-x_sz, -y_sz, z_sz,   0.0f,  -1.0f, 0.0f,  0.0f,     0.0f,
 		-x_sz, -y_sz, -z_sz,  0.0f,  -1.0f, 0.0f,  0.0f,     uv_scale,
 		
-		-x_sz, y_sz, -z_sz,   0.0f,  1.0f,  0.0f,  0.0f,     uv_scale,
+		-x_sz, y_sz, -z_sz,   0.0f,  1.0f,  0.0f,  0.0f,     uv_scale, // up
 		x_sz,  y_sz, -z_sz,   0.0f,  1.0f,  0.0f,  uv_scale, uv_scale,
 		x_sz,  y_sz, z_sz,    0.0f,  1.0f,  0.0f,  uv_scale, 0.0f,
 		x_sz,  y_sz, z_sz,    0.0f,  1.0f,  0.0f,  uv_scale, 0.0f,
@@ -67,6 +69,11 @@ float *cube_vertices(float x_sz, float y_sz, float z_sz, float uv_scale)
 CubeMesh::CubeMesh(float x_sz, float y_sz, float z_sz, float uv_scale) :
 	Mesh(cube_vertices(x_sz, y_sz, z_sz, uv_scale), cube_verts, cube_stride)
 {}
+
+CubeMesh::~CubeMesh()
+{
+	delete this->verts;
+}
 
 void
 CubeMesh::load()

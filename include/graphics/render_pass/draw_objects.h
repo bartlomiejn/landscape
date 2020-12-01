@@ -1,5 +1,4 @@
-#ifndef LANDSCAPE_DRAW_OBJECTS_H
-#define LANDSCAPE_DRAW_OBJECTS_H
+#pragma once
 
 #include <memory>
 #include <glm/glm.hpp>
@@ -85,5 +84,3 @@ public:
 			model->draw(ctx);
 	}
 };
-
-#endif //LANDSCAPE_DRAW_OBJECTS_H

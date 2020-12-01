@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <graphics/primitives/plane.h>
 
+using namespace GFX;
+
 const int plane_verts = 6;
 const int plane_stride = 8;
 
@@ -38,7 +40,7 @@ PlaneMesh::PlaneMesh(float x_sz, float y_sz, float uv_scale):
 
 PlaneMesh::~PlaneMesh()
 {
-	delete[] vertices;
+	delete[] verts;
 }
 
 void

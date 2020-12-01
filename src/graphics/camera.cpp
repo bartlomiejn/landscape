@@ -7,7 +7,7 @@ Camera::Camera(
 	glm::vec3 position, glm::vec3 world_up, float yaw, float pitch,
 	float fov
 ) :
-	cam_front(glm::vec3(0.0f, 0.0f, -1.0f)),
+	cam_front(glm::vec3(1.0f, 0.0f, 0.0f)),
 	cam_position(position),
 	cam_world_up(world_up),
 	cam_yaw(yaw),
@@ -33,6 +33,12 @@ Camera::move(Direction direction, float delta)
 			break;
 		case direction_right:
 			cam_position += cam_right * delta;
+			break;
+		case direction_up:
+			cam_position += cam_up * delta;
+			break;
+		case direction_down:
+			cam_position -= cam_up * delta;
 			break;
 	}
 }

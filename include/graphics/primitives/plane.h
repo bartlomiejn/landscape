@@ -1,8 +1,9 @@
-#ifndef LANDSCAPE_PLANE_H
-#define LANDSCAPE_PLANE_H
+#pragma once
 
 #include <graphics/mesh.h>
 
+namespace GFX
+{
 class PlaneMesh : public Mesh
 {
 public:
@@ -19,5 +20,4 @@ public:
 	/// Loads the mesh to the GPU.
 	void load() override;
 };
-
-#endif //LANDSCAPE_PLANE_H
+};

@@ -1,10 +1,11 @@
-#ifndef LANDSCAPE_CUBE_H
-#define LANDSCAPE_CUBE_H
+#pragma once
 
 #include <graphics/mesh.h>
 
+namespace GFX 
+{
 /// A cube mesh.
-class CubeMesh : public Mesh
+class CubeMesh : public GFX::Mesh
 {
 public:
 	/// Create a cube mesh instance.
@@ -16,8 +17,9 @@ public:
 		float x_sz = 0.5f, float y_sz = 0.5f, float z_sz = 0.5f,
 		float uv_scale = 1.0f);
 	
+	virtual ~CubeMesh();
+
 	/// Loads the cube mesh to the GPU.
 	void load() override;
 };
-
-#endif //LANDSCAPE_CUBE_H
+};

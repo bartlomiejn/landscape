@@ -1,5 +1,4 @@
-#ifndef LANDSCAPE_MODEL_H
-#define LANDSCAPE_MODEL_H
+#pragma once
 
 #include <glm/glm.hpp>
 #include <graphics/mesh.h>
@@ -10,7 +9,7 @@
 class Model
 {
 public:
-	Mesh *mesh;
+	GFX::Mesh *mesh;
 	Shader *shader;
 	Material *material;
 	glm::vec3 translation;
@@ -19,7 +18,7 @@ public:
 	glm::vec3 scale;
 	
 	Model(
-		Mesh *mesh,
+		GFX::Mesh *mesh,
 		Shader *shader,
 		Material *material,
 		glm::vec3 translation,
@@ -37,5 +36,3 @@ public:
 	/// \param shader
 	void draw(Shader &override_shader) const;
 };
-
-#endif //LANDSCAPE_MODEL_H

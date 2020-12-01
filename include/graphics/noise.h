@@ -1,5 +1,4 @@
-#ifndef LANDSCAPE_PERLIN_NOISE_H
-#define LANDSCAPE_PERLIN_NOISE_H
+#pragma once
 
 #include <memory>
 #include <array>
@@ -130,7 +129,7 @@ namespace Noise
 		/// Samples a byte at (x, y, z). Throws an exception if out of
 		/// bounds.
 		/// \return
-		int try_sample(int x, int y, int z) const
+		int sample(int x, int y, int z) const
 		{
 			return data.at(index_for(x, y, z));
 		};
@@ -150,5 +149,3 @@ namespace Noise
 		}
 	};
 }
-
-#endif //LANDSCAPE_PERLIN_NOISE_H

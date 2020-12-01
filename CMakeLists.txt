@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 project(landscape)
 
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 set(GLFW_DIR        ${PROJECT_SOURCE_DIR}/lib/glfw)
@@ -53,55 +55,26 @@ set(SOURCES
         src/graphics/primitives/cube.cpp
         src/graphics/primitives/plane.cpp
         src/graphics/model.cpp
-        src/graphics/noise.cpp
-        )
+        src/graphics/noise.cpp)
 
 add_executable(landscape ${SOURCES})
 add_dependencies(landscape glfw glm)
 
-# Libraries
-configure_file(
+add_custom_command(
+        TARGET landscape 
+        PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy 
         ${GLFW_BINARY_DIR}/lib/libglfw.3.dylib
-        ${CMAKE_BINARY_DIR}/output/lib/libglfw.3.dylib
-        COPYONLY)
-
-# Shaders
-configure_file(
-        ${PROJECT_SOURCE_DIR}/src/glsl/vertex.glsl
-        ${CMAKE_BINARY_DIR}/output/glsl/vertex.glsl
-        COPYONLY)
-configure_file(
-        ${PROJECT_SOURCE_DIR}/src/glsl/material.glsl
-        ${CMAKE_BINARY_DIR}/output/glsl/material.glsl
-        COPYONLY)
-configure_file(
-        ${PROJECT_SOURCE_DIR}/src/glsl/white.glsl
-        ${CMAKE_BINARY_DIR}/output/glsl/white.glsl
-        COPYONLY)
-configure_file(
-        ${PROJECT_SOURCE_DIR}/src/glsl/shadowmap_vertex.glsl
-        ${CMAKE_BINARY_DIR}/output/glsl/shadowmap_vertex.glsl
-        COPYONLY)
-configure_file(
-        ${PROJECT_SOURCE_DIR}/src/glsl/shadowmap_frag.glsl
-        ${CMAKE_BINARY_DIR}/output/glsl/shadowmap_frag.glsl
-        COPYONLY)
-configure_file(
-        ${PROJECT_SOURCE_DIR}/src/glsl/shadowmap_vertex_quad.glsl
-        ${CMAKE_BINARY_DIR}/output/glsl/shadowmap_vertex_quad.glsl
-        COPYONLY)
-
-configure_file(
-        ${PROJECT_SOURCE_DIR}/src/glsl/shadowmap_frag_quad.glsl
-        ${CMAKE_BINARY_DIR}/output/glsl/shadowmap_frag_quad.glsl
-        COPYONLY)
-
-# Image assets
-configure_file(
-        ${PROJECT_SOURCE_DIR}/assets/blocks/ground_diff.jpg
-        ${CMAKE_BINARY_DIR}/output/assets/blocks/ground_diff.jpg
-        COPYONLY)
-configure_file(
-        ${PROJECT_SOURCE_DIR}/assets/blocks/ground_spec.jpg
-        ${CMAKE_BINARY_DIR}/output/assets/blocks/ground_spec.jpg
-        COPYONLY)
+        ${CMAKE_BINARY_DIR}/output/lib/libglfw.3.dylib)
+add_custom_command(
+        TARGET landscape
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${PROJECT_SOURCE_DIR}/src/glsl
+        ${CMAKE_BINARY_DIR}/output/glsl)
+add_custom_command(
+        TARGET landscape
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${PROJECT_SOURCE_DIR}/assets
+        ${CMAKE_BINARY_DIR}/output/assets)

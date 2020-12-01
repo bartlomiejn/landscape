@@ -8,7 +8,9 @@ enum Direction
 	direction_forward,
 	direction_backward,
 	direction_left,
-	direction_right
+	direction_right,
+	direction_up,
+	direction_down
 };
 
 class Camera
